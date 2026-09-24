@@ -1,0 +1,11 @@
+config,n_questions,words_total,words_median,eligible_total,typos_total,real_typos_total
+clean,500,22875,43.0,15278,,
+typo25_real10,500,,,,3814,377
+typo25_real40,500,,,,3814,1514
+typo25_real70,500,,,,3814,2648
+typo50_real10,500,,,,7635,753
+typo50_real40,500,,,,7635,3030
+typo50_real70,500,,,,7635,5319
+typo75_real10,500,,,,11464,1154
+typo75_real40,500,,,,11464,4602
+typo75_real70,500,,,,11464,8018

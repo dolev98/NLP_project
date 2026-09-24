@@ -1,0 +1,14 @@
+# raw generations, judge scores and typo datasets are downloaded, not committed
+data/
+# python
+__pycache__/
+*.pyc
+.venv/
+# LaTeX build files (report.pdf is committed)
+report/*.aux
+report/*.log
+report/*.bbl
+report/*.blg
+report/*.out
+# OS
+.DS_Store

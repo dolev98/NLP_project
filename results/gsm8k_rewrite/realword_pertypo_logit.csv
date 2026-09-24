@@ -1,0 +1,2 @@
+n,coef_num_real,coef_num_nonword,odds_real,odds_nonword,intercept,relative_loss_real_vs_nonword,coef_real_ci_lo,coef_real_ci_hi,coef_nonword_ci_lo,coef_nonword_ci_hi,relative_loss_ci_lo,relative_loss_ci_hi,n_bootstrap
+4465,-0.0743,-0.03665,0.9284,0.964,1.79061,1.9896,-0.08868,-0.06199,-0.0497,-0.02565,1.544,2.682,1000

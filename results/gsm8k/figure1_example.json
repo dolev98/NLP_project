@@ -1,0 +1,75 @@
+{
+ "config": "typo25_real40",
+ "idx": 0,
+ "gold": "18",
+ "clean_question": "Janet’s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+ "typo_question": "Janet’s duck lay 16 eggs per adqy. Sje east rthere for breakfast every morning and bakes muffins for uher friend every azy with four. She sells the remainder at the farmers' market daily for $2 per resh duck egg. How much in dollars does she make every day at the faremrs' market?",
+ "clean_answer": "18",
+ "clean_correct": true,
+ "typo_answer": "24",
+ "typo_correct": false,
+ "typos": [
+  {
+   "original": "ducks",
+   "typo": "duck",
+   "real_word": true,
+   "spellchecker_accepts": true
+  },
+  {
+   "original": "day",
+   "typo": "adqy",
+   "real_word": false,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "She",
+   "typo": "Sje",
+   "real_word": false,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "eats",
+   "typo": "east",
+   "real_word": true,
+   "spellchecker_accepts": true
+  },
+  {
+   "original": "three",
+   "typo": "rthere",
+   "real_word": false,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "her",
+   "typo": "uher",
+   "real_word": false,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "friends",
+   "typo": "friend",
+   "real_word": true,
+   "spellchecker_accepts": true
+  },
+  {
+   "original": "day",
+   "typo": "azy",
+   "real_word": false,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "fresh",
+   "typo": "resh",
+   "real_word": true,
+   "spellchecker_accepts": false
+  },
+  {
+   "original": "farmers",
+   "typo": "faremrs",
+   "real_word": false,
+   "spellchecker_accepts": false
+  }
+ ],
+ "num_total": 10,
+ "num_real": 4
+}

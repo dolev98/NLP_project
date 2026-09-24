@@ -1,0 +1,21 @@
+\begin{tabular}{l rr rr rr}
+\toprule
+& \multicolumn{2}{c}{\textbf{GSM8K}} & \multicolumn{2}{c}{\textbf{MATH-500}} & \multicolumn{2}{c}{\textbf{ARC-C}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\textbf{condition} & repair & doubt & repair & doubt & repair & doubt \\
+\midrule
+\multicolumn{7}{l}{\emph{clean}} \\
+\quad --- & 0.12 & 4.46 & 0.03 & 3.66 & 0.03 & 4.70 \\
+\midrule \multicolumn{7}{l}{\emph{by typo rate }$r$} \\
+\quad 25\% & 0.88 & 4.86 & 0.35 & 3.90 & 0.97 & 5.12 \\
+\quad 50\% & 1.27 & 5.12 & 0.35 & 3.98 & 1.03 & 5.31 \\
+\quad 75\% & 1.74 & 5.67 & 0.48 & 4.01 & 1.35 & 5.63 \\
+\midrule \multicolumn{7}{l}{\emph{by real-word ratio }$\rho$} \\
+\quad 10\% & 1.13 & 5.20 & 0.32 & 3.87 & 0.94 & 5.33 \\
+\quad 40\% & 1.32 & 5.29 & 0.39 & 4.03 & 1.10 & 5.27 \\
+\quad 70\% & 1.43 & 5.15 & 0.47 & 3.99 & 1.31 & 5.45 \\
+\midrule \multicolumn{7}{l}{\emph{by final answer (typo configs)}} \\
+\quad correct & 0.97 & 4.75 & 0.30 & 3.78 & 0.98 & 5.00 \\
+\quad wrong & 2.40 & 6.82 & 1.36 & 5.86 & 1.76 & 6.92 \\
+\bottomrule
+\end{tabular}
