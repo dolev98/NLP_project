@@ -262,7 +262,7 @@ dataset rather than across benchmarks.
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\input{tables/tab_datastats}
+\resizebox{\columnwidth}{!}{\input{tables/tab_datastats}}
 \caption{Dataset and corruption statistics over the nine corrupted conditions
 ($r\in\{25,50,75\}\%$, $\rho\in\{10,40,70\}\%$), first 500 questions of GSM8K
 and ARC-Challenge and all of MATH-500. \emph{Eligible words} are those the
@@ -481,7 +481,7 @@ repair, although we did not test this trend for significance.
 \begin{table}[t]
 \centering
 \footnotesize
-\input{tables/tab_judge}
+\resizebox{\columnwidth}{!}{\input{tables/tab_judge}}
 \caption{Mean LLM-judge scores over answered traces. \emph{repair} is the repair
 score (0--5, higher means less of the intended meaning recovered); \emph{doubt}
 is the self-doubt score (0--10, higher means more hesitation and looping).}
@@ -678,7 +678,7 @@ everyday typing errors should therefore be treated as a capability to be
 developed explicitly, rather than assumed from strong benchmark performance.
 
 All code is available in the project repository, and the raw generation logs are
-hosted on the Hugging Face Hub (\texttt{ronshtricker/typo-reasoning-results}).
+hosted on the Hugging Face Hub (\texttt{ronshtricker/\allowbreak typo-reasoning-results}).
 All reported results can be reproduced by running \texttt{download\_data.py}
 followed by \texttt{run\_all.py}.
 

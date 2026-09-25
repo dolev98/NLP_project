@@ -53,8 +53,84 @@ def flatten(src, name):
     s = re.sub(r"\\title\{.*?\}\n", lambda _: TITLE, s, count=1, flags=re.S)  # so only content is marked
     s = s.replace(r"\bibliographystyle{acl_natbib}", "").replace(r"\bibliographystyle{plainnat}", "")
     s = s.replace(r"{\small\bibliography{custom}}", r"\bibliography{custom}")
+    # the edited version lets the long Hub name break; give the original the same hint
+    s = s.replace(r"\texttt{ronshtricker/typo-reasoning-results}",
+                  r"\texttt{ronshtricker/\allowbreak typo-reasoning-results}")
     head, tail = s.split(r"\bibliography{custom}")
     return head + bbl(src, name) + tail
+
+
+FLOAT = re.compile(r"\\begin\{(figure\*?|table\*?)\}.*?\\end\{\1\}", re.S)
+
+
+def pull_floats(s):
+    """Replace every labelled figure/table by a placeholder line; return text and {label: float}."""
+    floats = {}
+    def rep(m):
+        lab = re.search(r"\\label\{([^}]*)\}", m.group(0))
+        if not lab:
+            return m.group(0)
+        floats[lab.group(1)] = m.group(0)
+        return "\n\\FLOATPLACEHOLDER{" + lab.group(1) + "}\n"
+    return FLOAT.sub(rep, s), floats
+
+
+def latexdiff_fragment(old, new):
+    d = tempfile.mkdtemp(dir=TMP)
+    open(os.path.join(d, "a.tex"), "w").write(old)
+    open(os.path.join(d, "b.tex"), "w").write(new)
+    r = run("latexdiff --type=UNDERLINE --math-markup=whole --append-safecmd=citep,citet a.tex b.tex", d)
+    return r.stdout
+
+
+def caption_of(f):
+    m = re.search(r"\\caption\{", f)
+    j = skip_group(f, m.end())
+    return f[m.end():j - 1], m.start(), j
+
+
+def strike_block(body):
+    """Old minipage body with every text paragraph struck through (for redesigned boxes)."""
+    out = []
+    for para in re.split(r"\n\s*\n", body.strip()):
+        p = para.strip()
+        if not p or re.fullmatch(r"(\\(smallskip|medskip|bigskip|hrule|noindent)\s*)+", p):
+            out.append(p); continue
+        p = p.replace("\\\\", " ").replace("\\noindent", "")
+        out.append("\\noindent\\DIFdelFL{" + p + "}")
+    return "\n\n".join(out)
+
+
+def float_diff(label, old, new):
+    """Diff of one figure/table (the float itself when unchanged)."""
+    if old == new:
+        return new
+    d = latexdiff_fragment(old, new)
+    structural = re.search(r"%DIFDELCMD <.*\\(begin|end)\{(minipage|tabular)\}", d)
+    if not structural:
+        return d
+    # a table whose rows are unchanged but whose wrapper changed (e.g. scaled to the
+    # column): show the new table as it is and mark only the caption
+    tab = re.compile(r"\\begin\{tabular\}.*?\\end\{tabular\}", re.S)
+    ot, nt = tab.search(old), tab.search(new)
+    if ot and nt and ot.group(0) == nt.group(0):
+        oc, _, _ = caption_of(old)
+        nc, ns, ne = caption_of(new)
+        cap = latexdiff_fragment("\\caption{" + oc + "}", "\\caption{" + nc + "}").strip()
+        return new[:ns] + cap + new[ne:]
+    # the box/table itself was redesigned: show the old one struck through above the new one
+    oc, _, _ = caption_of(old)
+    nc, ns, ne = caption_of(new)
+    om = re.search(r"\\begin\{minipage\}\{[^}]*\}(.*?)\\end\{minipage\}", old, re.S)
+    nm = re.search(r"\\fbox\{\\begin\{minipage\}.*?\\end\{minipage\}\}", new, re.S)
+    if not (om and nm):
+        return d
+    cap = latexdiff_fragment("\\caption{" + oc + "}", "\\caption{" + nc + "}").strip()
+    head = new[:new.index(nm.group(0))]
+    old_box = "\\fbox{\\begin{minipage}{0.93\\columnwidth}\n" + strike_block(om.group(1)) + "\n\\end{minipage}}"
+    return (head + "{\\scriptsize\\color{red}\\textbf{Old version of this box (deleted):}}\\\\[2pt]\n" + old_box
+            + "\n\n\\medskip{\\scriptsize\\color{blue}\\textbf{New version of this box:}}\\\\[2pt]\n"
+            + nm.group(0) + "\n" + cap + new[ne:])
 
 
 def skip_group(t, i):
@@ -102,12 +178,34 @@ LEGEND = (r"\begin{center}\fbox{\parbox{0.95\linewidth}{\small\textbf{How change
 
 def main():
     d = os.path.join(TMP, "diff"); os.makedirs(d)
-    open(os.path.join(d, "old.tex"), "w").write(flatten(OLD, "old"))
-    open(os.path.join(d, "new.tex"), "w").write(flatten(NEW, "new"))
+    old_text, old_floats = pull_floats(flatten(OLD, "old"))
+    new_text, new_floats = pull_floats(flatten(NEW, "new"))
+    open(os.path.join(d, "old.tex"), "w").write(old_text)
+    open(os.path.join(d, "new.tex"), "w").write(new_text)
     r = run("latexdiff --type=UNDERLINE --math-markup=whole --append-safecmd=citep,citet old.tex new.tex > main.tex", d)
     if r.returncode:
         raise SystemExit("latexdiff failed:\n" + r.stderr)
     t = open(os.path.join(d, "main.tex")).read()
+    # put the floats back: each diffed on its own, at its place in the edited version
+    def put(m):
+        lab = m.group(1)
+        if lab in new_floats:
+            return float_diff(lab, old_floats.get(lab), new_floats[lab]) if lab in old_floats else new_floats[lab]
+        return m.group(0)
+    lines = []
+    for line in t.split("\n"):
+        c = re.search(r"(?<!\\)%", line)                   # the comment part holds deleted text
+        code, comment = (line[:c.start()], line[c.start():]) if c else (line, "")
+        code = re.sub(r"\\FLOATPLACEHOLDER\{([^}]*)\}", lambda m: put(m), code)
+        line = code + comment
+        m = re.search(r"\\FLOATPLACEHOLDER\{([^}]*)\}", comment)
+        if m and m.group(1) not in new_floats:              # a float that was removed
+            cap, _, _ = caption_of(old_floats[m.group(1)])
+            line += "\n\\begin{center}\\fbox{\\parbox{0.9\\linewidth}{\\small\\DIFdel{Removed " + \
+                    ("table" if m.group(1).startswith("tab") else "figure") + ": " + \
+                    re.sub(r"\\(label|ref)\{[^}]*\}", "", cap) + "}}}\\end{center}"
+        lines.append(line)
+    t = "\n".join(lines)
     # latexdiff makes \DIF..begin/end..FL robust; inside tables they break \midrule
     t = re.sub(r"(\\begin\{tabular\}.*?\\end\{tabular\})",
                lambda m: re.sub(r"\\DIF(?:add|del)(?:begin|end)FL\s*", "", m.group(1)), t, flags=re.S)
@@ -120,7 +218,8 @@ def main():
     body = re.sub(r"\\cmidrule\\DIFadd[BG]?(?:FL)?\{(\([^)]*\))\}\{\\DIFadd[BG]?(?:FL)?\{([^}]*)\}\}",
                   r"\\cmidrule\1{\2}", body)
     body = body.replace("\\maketitle", "\\maketitle\n" + LEGEND, 1)
-    pre += ("\\usepackage{adjustbox}\n\\definecolor{DIFgreen}{rgb}{0,0.5,0.1}\n"
+    body = body.replace("\\begin{table}[!ht]", "\\begin{table}[H]")
+    pre += ("\\usepackage{adjustbox}\n\\usepackage{float}\n\\definecolor{DIFgreen}{rgb}{0,0.5,0.1}\n"
             "\\providecommand{\\DIFaddB}[1]{{\\protect\\color{blue}\\uwave{#1}}}\n"
             "\\providecommand{\\DIFaddBFL}[1]{\\DIFaddB{#1}}\n"
             "\\providecommand{\\DIFaddG}[1]{{\\protect\\color{DIFgreen}\\uwave{#1}}}\n"

@@ -16,6 +16,12 @@ After you edit folder 2, rebuild the marked copy (needs pdflatex, bibtex and lat
 
     python3 make_changes.py
 
+How the marked copy shows moved and redesigned parts: tables and figures are compared
+one by one and kept in their place, so only real changes inside them are marked. The
+Figure 1 example box was redesigned, so the old box is shown struck through above the
+new one. A figure that was removed is shown as a "Removed figure" note.
+
 Known points about folder 2: the Conclusion falls on page 9 (the template order puts
-it after Limitations and AI Disclosure); Tables 1 and 2 are slightly wider than the
-column, as they were in the 22 Sep version.
+it after Limitations and AI Disclosure). Two formatting-only fixes were made so nothing
+runs past its column: Tables 1 and 2 are scaled to the column width, and the long Hub
+name in the Conclusion may break across lines.
