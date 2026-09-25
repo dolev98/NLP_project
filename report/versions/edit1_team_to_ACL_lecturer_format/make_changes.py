@@ -96,8 +96,19 @@ def strike_block(body):
         p = para.strip()
         if not p or re.fullmatch(r"(\\(smallskip|medskip|bigskip|hrule|noindent)\s*)+", p):
             out.append(p); continue
-        p = p.replace("\\\\", " ").replace("\\noindent", "")
-        out.append("\\noindent\\DIFdelFL{" + p + "}")
+        p = p.replace("\\\\", " ").replace("\\noindent", "").strip()
+        lead = ""                                   # vertical spacing stays outside the strike
+        while True:
+            m = re.match(r"\\(smallskip|medskip|bigskip)\s*", p)
+            if not m:
+                break
+            lead += m.group(0).strip() + "\n"; p = p[m.end():]
+        # \sout cannot break lines inside \emph{...} or \texttt{...}: set the font from outside
+        font = "{"
+        for cmd, decl in (("\\emph{", "{\\itshape"), ("\\texttt{", "{\\ttfamily")):
+            if p.startswith(cmd) and p.endswith("}") and skip_group(p, len(cmd)) == len(p):
+                p, font = p[len(cmd):-1], decl
+        out.append(lead + "\\noindent" + font + "\\DIFdelFL{" + p + "}}")
     return "\n\n".join(out)
 
 

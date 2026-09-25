@@ -1,7 +1,7 @@
 %DIF 1d1
 %DIF LATEXDIFF DIFFERENCE FILE
-%DIF DEL old.tex   Fri Sep 25 11:25:53 2026
-%DIF ADD new.tex   Fri Sep 25 11:25:53 2026
+%DIF DEL old.tex   Fri Sep 25 11:28:43 2026
+%DIF ADD new.tex   Fri Sep 25 11:28:43 2026
 %DIF < % =====================================================================
 %DIF -------
 % The Silent Tax: How Typos Reshape Reasoning in Thinking LLMs
@@ -346,28 +346,28 @@ mitigations reliably recovers the loss (\S\ref{sec:fixes}).
 \setlength{\fboxsep}{5pt}
 {\scriptsize\color{red}\textbf{Old version of this box (deleted):}}\\[2pt]
 \fbox{\begin{minipage}{0.93\columnwidth}
-\noindent\DIFdelFL{\textbf{Clean} (model answers 18, correct)}
+\noindent{\DIFdelFL{\textbf{Clean} (model answers 18, correct)}}
 
-\noindent\DIFdelFL{\smallskip
-\emph{Janet's ducks lay 16 eggs per day. She eats three for breakfast
+\smallskip
+\noindent{\itshape\DIFdelFL{Janet's ducks lay 16 eggs per day. She eats three for breakfast
 every morning and bakes muffins for her friends every day with four. She sells
 the remainder at the farmers' market daily for \$2 per fresh duck egg. How much
 in dollars does she make every day at the farmers' market?}}
 
 \medskip\hrule\medskip
 
-\noindent\DIFdelFL{\textbf{25\% typos, 40\% of them real words} (model answers 26, wrong)}
+\noindent{\DIFdelFL{\textbf{25\% typos, 40\% of them real words} (model answers 26, wrong)}}
 
-\noindent\DIFdelFL{\smallskip
-\emph{Janet's \textbf{duck} lay 16 eggs per \textbf{adqy}.
+\smallskip
+\noindent{\itshape\DIFdelFL{Janet's \textbf{duck} lay 16 eggs per \textbf{adqy}.
 \textbf{Sje} \textbf{east} \textbf{rthere} for breakfast every morning and bakes
 muffins for \textbf{uher} \textbf{friend} every \textbf{azy} with four. She
 sells the remainder at the farmers' market daily for \$2 per \textbf{resh} duck
 egg. How much in dollars does she make every day at the \textbf{faremrs'}
 market?}}
 
-\noindent\DIFdelFL{\medskip
-\texttt{eats\arrow east \quad ducks\arrow duck \quad three\arrow rthere
+\medskip
+\noindent{\ttfamily\DIFdelFL{eats\arrow east \quad ducks\arrow duck \quad three\arrow rthere
   friends\arrow friend \quad fresh\arrow resh \quad her\arrow uher}}
 \end{minipage}}
 
