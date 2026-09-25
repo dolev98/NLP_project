@@ -13,6 +13,7 @@ unchanged, and change-marked copies for reviewing what changed.
 | `changes_step1_team_to_acl_format.pdf` | Changes from 1 to 2 only. |
 | `changes_step2_related_work_and_bibliography.pdf` | Changes from 2 to 3 only. |
 | `changes_step3_results_rebuild.pdf` | Changes from 3 to 4 only. |
+| `edit1_team_to_ACL_lecturer_format/` | Editable LaTeX of the first edit (1 to 2) in the exact format of the lecturer's template: the team's version, the edited version, and a change-marked copy that `make_changes.py` rebuilds after edits. See its README. |
 
 How the change-marked copies are coloured:
 

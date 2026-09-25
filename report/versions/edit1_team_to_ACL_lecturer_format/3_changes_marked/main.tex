@@ -1,0 +1,1814 @@
+%DIF 1d1
+%DIF LATEXDIFF DIFFERENCE FILE
+%DIF DEL old.tex   Fri Sep 25 11:15:26 2026
+%DIF ADD new.tex   Fri Sep 25 11:15:27 2026
+%DIF < % =====================================================================
+%DIF -------
+% The Silent Tax: How Typos Reshape Reasoning in Thinking LLMs
+%DIF 3c2
+%DIF < %  Final report -- built locally, outside the git repository.
+%DIF -------
+% NLP Course 2025/2026, Tel Aviv University. %DIF > 
+%DIF -------
+%
+%DIF 5-8c4-17
+%DIF < %  Provenance:
+%DIF < %    Abstract, 1, 2, 4, 5,     author text, verbatim from report_text.txt
+%DIF < %    6, 7, 8, 9                (re-synced 2026-09-19, second pass)
+%DIF < %    3 Method                  taken from Ron's paper, unchanged
+%DIF -------
+% Built against the official ACL Overleaf template. Drop acl.sty, acl_natbib.bst %DIF > 
+% and the ACL .cls-adjacent files next to this file (see README.md). If they are %DIF > 
+% absent the document still compiles with a plain fallback preamble. %DIF > 
+ %DIF > 
+\documentclass[11pt]{article} %DIF > 
+ %DIF > 
+\IfFileExists{acl.sty}{% %DIF > 
+  \usepackage[final]{acl}% %DIF > 
+}{% %DIF > 
+  % Fallback so the document still builds without the ACL style files. %DIF > 
+  \usepackage[margin=1in]{geometry}% %DIF > 
+  \usepackage{natbib}% %DIF > 
+  \providecommand{\And}{\quad}% %DIF > 
+  \providecommand{\AND}{\quad}% %DIF > 
+%DIF -------
+  %
+%DIF 10-11c19
+%DIF < % =====================================================================
+%DIF < \documentclass[10pt,twocolumn,a4paper]{article}
+%DIF -------
+} %DIF > 
+%DIF -------
+
+%DIF 13c21-22
+%DIF < \usepackage[margin=0.78in]{geometry}
+%DIF -------
+\usepackage{times} %DIF > 
+\usepackage{latexsym} %DIF > 
+%DIF -------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%DIF 16-17c25
+%DIF < \usepackage{times}
+%DIF < \usepackage{booktabs}
+%DIF -------
+\usepackage{microtype} %DIF > 
+%DIF -------
+\usepackage{graphicx}
+%DIF 19a27
+\usepackage{booktabs} %DIF > 
+%DIF -------
+\usepackage{amsmath}
+\usepackage{amssymb}
+%DIF 21-29c30-31
+%DIF < \usepackage{float}
+%DIF < \usepackage{caption}
+%DIF < \usepackage{url}
+%DIF < \usepackage[hidelinks]{hyperref}
+%DIF < \usepackage[round]{natbib}
+%DIF < % stfloats lets a full-width figure*/table* sit at the BOTTOM of a page as well
+%DIF < % as the top. Without it a two-column document can only use page tops, so wide
+%DIF < % floats queue up and drift away from the text that cites them.
+%DIF < \usepackage{stfloats}
+%DIF -------
+\usepackage{multirow} %DIF > 
+\usepackage{xcolor} %DIF > 
+%DIF -------
+
+%DIF 31-42c33
+%DIF < % Allow floats to take more of a page before LaTeX defers them, and make it
+%DIF < % much more reluctant to flush everything onto a float-only page.
+%DIF < \renewcommand{\topfraction}{0.9}
+%DIF < \renewcommand{\bottomfraction}{0.7}
+%DIF < \renewcommand{\textfraction}{0.08}
+%DIF < \renewcommand{\floatpagefraction}{0.75}
+%DIF < \renewcommand{\dbltopfraction}{0.9}
+%DIF < \renewcommand{\dblfloatpagefraction}{0.75}
+%DIF < \setcounter{topnumber}{3}
+%DIF < \setcounter{bottomnumber}{2}
+%DIF < \setcounter{totalnumber}{4}
+%DIF < \setcounter{dbltopnumber}{3}
+%DIF -------
+\graphicspath{{figures/}} %DIF > 
+%DIF -------
+
+%DIF 44-64c35
+%DIF < % Run-in paragraph headings: article's default before-skip is
+%DIF < % 3.25ex plus 1ex, and flushbottom stretches that 1ex to fill the column,
+%DIF < % which opens uneven gaps between consecutive \paragraph blocks.
+%DIF < \makeatletter
+%DIF < \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+%DIF <   {1.9ex \@plus 0.25ex \@minus 0.2ex}%
+%DIF <   {-0.9em}%
+%DIF <   {\normalfont\normalsize\bfseries}}
+%DIF < \makeatother
+%DIF < 
+%DIF < \captionsetup{font=small,labelfont=bf,skip=3pt}
+%DIF < \setlength{\bibsep}{1pt plus 0.3ex}
+%DIF < \setlength{\textfloatsep}{6pt plus 1pt minus 2pt}
+%DIF < \setlength{\dbltextfloatsep}{6pt plus 1pt minus 2pt}
+%DIF < \setlength{\floatsep}{4pt plus 1pt minus 2pt}
+%DIF < \setlength{\dblfloatsep}{4pt plus 1pt minus 2pt}
+%DIF < \setlength{\intextsep}{4pt plus 1pt minus 2pt}
+%DIF < \setlength{\abovecaptionskip}{3pt}
+%DIF < \setlength{\belowcaptionskip}{0pt}
+%DIF < \renewcommand{\arraystretch}{1.02}
+%DIF < 
+%DIF -------
+\newcommand{\typo}[1]{\textcolor{red!75!black}{\textbf{#1}}} %DIF > 
+%DIF -------
+\newcommand{\pp}{\,pp}
+\newcommand{\arrow}{$\rightarrow$}
+
+\title{The Silent Tax: How Typos Reshape Reasoning in Thinking LLMs}
+
+\author{%
+  Shiran Hamami \\ 207487026 \\ \small\texttt{shiranhamami@mail.tau.ac.il}
+  \And
+  Dolev Abudi \\ 323096099 \\ \small\texttt{dolevabudi@mail.tau.ac.il}
+  \AND
+  Ron Shtricker \\ 209524552 \\ \small\texttt{ronshtricker@mail.tau.ac.il}
+  \And
+  Ido Azoulay \\ 212710958 \\ \small\texttt{idoazoulay1@mail.tau.ac.il}
+}
+%DIF < \date{}
+%DIF DELETED TITLE COMMANDS FOR MARKUP
+\date{}%DIFAUXCMD
+%DIF PREAMBLE EXTENSION ADDED BY LATEXDIFF
+%DIF UNDERLINE PREAMBLE %DIF PREAMBLE
+\RequirePackage[normalem]{ulem} %DIF PREAMBLE
+\RequirePackage{color}\definecolor{RED}{rgb}{1,0,0}\definecolor{BLUE}{rgb}{0,0,1} %DIF PREAMBLE
+\providecommand{\DIFadd}[1]{{\protect\color{blue}\uwave{#1}}} %DIF PREAMBLE
+\providecommand{\DIFdel}[1]{{\protect\color{red}\sout{#1}}} %DIF PREAMBLE
+%DIF SAFE PREAMBLE %DIF PREAMBLE
+\providecommand{\DIFaddbegin}{} %DIF PREAMBLE
+\providecommand{\DIFaddend}{} %DIF PREAMBLE
+\providecommand{\DIFdelbegin}{} %DIF PREAMBLE
+\providecommand{\DIFdelend}{} %DIF PREAMBLE
+\providecommand{\DIFmodbegin}{} %DIF PREAMBLE
+\providecommand{\DIFmodend}{} %DIF PREAMBLE
+%DIF FLOATSAFE PREAMBLE %DIF PREAMBLE
+\providecommand{\DIFaddFL}[1]{\DIFadd{#1}} %DIF PREAMBLE
+\providecommand{\DIFdelFL}[1]{\DIFdel{#1}} %DIF PREAMBLE
+\providecommand{\DIFaddbeginFL}{} %DIF PREAMBLE
+\providecommand{\DIFaddendFL}{} %DIF PREAMBLE
+\providecommand{\DIFdelbeginFL}{} %DIF PREAMBLE
+\providecommand{\DIFdelendFL}{} %DIF PREAMBLE
+\providecommand{\DIFscaledelfig}{0.5}
+%DIF HIGHLIGHTGRAPHICS PREAMBLE %DIF PREAMBLE
+\RequirePackage{settobox} %DIF PREAMBLE
+\RequirePackage{letltxmacro} %DIF PREAMBLE
+\newsavebox{\DIFdelgraphicsbox} %DIF PREAMBLE
+\newlength{\DIFdelgraphicswidth} %DIF PREAMBLE
+\newlength{\DIFdelgraphicsheight} %DIF PREAMBLE
+% store original definition of \includegraphics %DIF PREAMBLE
+\LetLtxMacro{\DIFOincludegraphics}{\includegraphics} %DIF PREAMBLE
+\providecommand{\DIFaddincludegraphics}[2][]{{\color{blue}\fbox{\DIFOincludegraphics[#1]{#2}}}} %DIF PREAMBLE
+\providecommand{\DIFdelincludegraphics}[2][]{% %DIF PREAMBLE
+\sbox{\DIFdelgraphicsbox}{\DIFOincludegraphics[#1]{#2}}% %DIF PREAMBLE
+\settoboxwidth{\DIFdelgraphicswidth}{\DIFdelgraphicsbox} %DIF PREAMBLE
+\settoboxtotalheight{\DIFdelgraphicsheight}{\DIFdelgraphicsbox} %DIF PREAMBLE
+\scalebox{\DIFscaledelfig}{% %DIF PREAMBLE
+\parbox[b]{\DIFdelgraphicswidth}{\usebox{\DIFdelgraphicsbox}\\[-\baselineskip] \rule{\DIFdelgraphicswidth}{0em}}\llap{\resizebox{\DIFdelgraphicswidth}{\DIFdelgraphicsheight}{% %DIF PREAMBLE
+\setlength{\unitlength}{\DIFdelgraphicswidth}% %DIF PREAMBLE
+\begin{picture}(1,1)% %DIF PREAMBLE
+\thicklines\linethickness{2pt} %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,0){\framebox(1,1){}}}% %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,0){\line( 1,1){1}}}% %DIF PREAMBLE
+{\color[rgb]{1,0,0}\put(0,1){\line(1,-1){1}}}% %DIF PREAMBLE
+\end{picture}% %DIF PREAMBLE
+}\hspace*{3pt}}} %DIF PREAMBLE
+} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddbegin}{\DIFaddbegin} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddend}{\DIFaddend} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelbegin}{\DIFdelbegin} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelend}{\DIFdelend} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddbegin}{\DIFOaddbegin \let\includegraphics\DIFaddincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddend}{\DIFOaddend \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelbegin}{\DIFOdelbegin \let\includegraphics\DIFdelincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelend}{\DIFOaddend \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddbeginFL}{\DIFaddbeginFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOaddendFL}{\DIFaddendFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelbeginFL}{\DIFdelbeginFL} %DIF PREAMBLE
+\LetLtxMacro{\DIFOdelendFL}{\DIFdelendFL} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddbeginFL}{\DIFOaddbeginFL \let\includegraphics\DIFaddincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFaddendFL}{\DIFOaddendFL \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelbeginFL}{\DIFOdelbeginFL \let\includegraphics\DIFdelincludegraphics} %DIF PREAMBLE
+\DeclareRobustCommand{\DIFdelendFL}{\DIFOaddendFL \let\includegraphics\DIFOincludegraphics} %DIF PREAMBLE
+%DIF AMSMATHULEM PREAMBLE %DIF PREAMBLE
+\makeatletter %DIF PREAMBLE
+\let\sout@orig\sout %DIF PREAMBLE
+\renewcommand{\sout}[1]{\ifmmode\text{\sout@orig{\ensuremath{#1}}}\else\sout@orig{#1}\fi} %DIF PREAMBLE
+\makeatother %DIF PREAMBLE
+%DIF COLORLISTINGS PREAMBLE %DIF PREAMBLE
+\RequirePackage{listings} %DIF PREAMBLE
+\RequirePackage{color} %DIF PREAMBLE
+\lstdefinelanguage{DIFcode}{ %DIF PREAMBLE
+%DIF DIFCODE_UNDERLINE %DIF PREAMBLE
+  moredelim=[il][\color{red}\sout]{\%DIF\ <\ }, %DIF PREAMBLE
+  moredelim=[il][\color{blue}\uwave]{\%DIF\ >\ } %DIF PREAMBLE
+} %DIF PREAMBLE
+\lstdefinestyle{DIFverbatimstyle}{ %DIF PREAMBLE
+	language=DIFcode, %DIF PREAMBLE
+	basicstyle=\ttfamily, %DIF PREAMBLE
+	columns=fullflexible, %DIF PREAMBLE
+	keepspaces=true %DIF PREAMBLE
+} %DIF PREAMBLE
+\lstnewenvironment{DIFverbatim}[1][]{\lstset{style=DIFverbatimstyle}}{} %DIF PREAMBLE
+\lstnewenvironment{DIFverbatim*}[1][]{\lstset{style=DIFverbatimstyle,showspaces=true}}{} %DIF PREAMBLE
+\lstset{extendedchars=\true,inputencoding=utf8}
+
+%DIF END PREAMBLE EXTENSION ADDED BY LATEXDIFF
+
+\usepackage{adjustbox}
+\definecolor{DIFgreen}{rgb}{0,0.5,0.1}
+\providecommand{\DIFaddB}[1]{{\protect\color{blue}\uwave{#1}}}
+\providecommand{\DIFaddBFL}[1]{\DIFaddB{#1}}
+\providecommand{\DIFaddG}[1]{{\protect\color{DIFgreen}\uwave{#1}}}
+\providecommand{\DIFaddGFL}[1]{\DIFaddG{#1}}
+\begin{document}
+\maketitle
+\begin{center}\fbox{\parbox{0.95\linewidth}{\small\textbf{How changes are marked.} \DIFdel{Red strikethrough}: deleted. \DIFaddB{Blue underline}: added (ACL format and writing). \DIFaddG{Green underline}: a number replaced by a different one. Figures are images and show the edited version. This file shows every change from the team's version to the edited version in the lecturer's ACL format.}}\end{center}
+
+% ---------------------------------------------------------------------
+%DIF <  ABSTRACT -- AUTHOR TEXT, verbatim.
+%DIF <  ---------------------------------------------------------------------
+\begin{abstract}
+Reasoning models perform strongly on clean mathematical and scientific
+benchmarks, but real users often write with typos. We study how these everyday
+errors affect not only final-answer accuracy, but also the reasoning process
+itself. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend We introduce a controlled typo generator that independently varies the
+number of corrupted words and the proportion of typos that produce another
+valid English word\DIFdelbegin \DIFdel{. We }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend apply it to 500 questions from each of GSM8K, MATH-500 \DIFdelbegin \DIFdel{, }\DIFdelend and
+ARC-Challenge, and evaluate DeepSeek-R1-Distill-Qwen-7B across all corruption
+settings. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend Typos consistently reduce accuracy, \DIFdelbegin \DIFdel{with the largest effect }\DIFdelend \DIFaddbegin \DIFaddB{most }\DIFaddend on GSM8K, where \DIFdelbegin \DIFdel{performance }\DIFdelend \DIFaddbegin \DIFaddB{it }\DIFaddend falls from
+91.4\% on clean questions to 60.4\% in the most corrupted setting. \DIFdelbegin \DIFdel{More importantly, typos }\DIFdelend \DIFaddbegin \DIFaddB{Typos }\DIFaddend that
+produce another valid \DIFdelbegin \DIFdel{English word are consistently }\DIFdelend \DIFaddbegin \DIFaddB{word are }\DIFaddend more harmful than non-word typos\DIFdelbegin \DIFdel{. Depending }\DIFdelend \DIFaddbegin \DIFaddB{: depending }\DIFaddend on
+the dataset, a real-word typo is estimated to be \DIFdelbegin \DIFdel{1.9 to 5.1 }\DIFdelend \DIFaddbegin \DIFaddG{1.3 to 5.3 }\DIFaddend times more damaging
+per typo. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend The reasoning traces show that the model often notices that something
+is wrong\DIFdelbegin \DIFdel{:
+corrupted inputs lead to }\DIFdelend \DIFaddbegin \DIFaddB{, with }\DIFaddend longer reasoning and more uncertainty language\DIFdelbegin \DIFdel{.
+However, }\DIFdelend \DIFaddbegin \DIFaddB{, but }\DIFaddend this does not
+translate into more effective self-correction\DIFdelbegin \DIFdel{. The }\DIFdelend \DIFaddbegin \DIFaddB{: the }\DIFaddend model hesitates more, but
+does not verify more. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Finally, none }\DIFdelend \DIFaddbegin \DIFaddB{None }\DIFaddend of the lightweight \DIFdelbegin \DIFdel{mitigation strategies we tested consistently
+improved performance. Warning the model does not improve performance, asking it
+to rewrite }\DIFdelend \DIFaddbegin \DIFaddB{mitigations we tested (a typo
+warning, rewriting }\DIFaddend the question first\DIFdelbegin \DIFdel{can make performance worse, and spell checking
+becomes less effective as the proportion of real-word typos increases. Overall,
+our results suggest that the }\DIFdelend \DIFaddbegin \DIFaddB{, or an external spell checker)
+consistently improved accuracy. The }\DIFaddend main challenge is not \DIFdelbegin \DIFdel{only }\DIFdelend detecting that the
+input is corrupted, but \DIFdelbegin \DIFdel{correctly recovering the }\DIFdelend \DIFaddbegin \DIFaddB{recovering its }\DIFaddend intended meaning.
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+Chain-of-thought prompting and reasoning-focused models have substantially
+improved performance on mathematical and scientific benchmarks
+\citep{wei2022,deepseekr1}. However, benchmark questions are \DIFdelbegin \DIFdel{usually }\DIFdelend carefully written,
+while real \DIFdelbegin \DIFdel{user inputs often contain typos }\DIFdelend \DIFaddbegin \DIFaddB{users often make simple typing mistakes }\DIFaddend such as swapped letters,
+missing characters, or nearby-key \DIFdelbegin \DIFdel{mistakes. }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{This gap motivates our study: real users often make simple typing mistakes when
+interacting with LLMs, so strong }\DIFdelend \DIFaddbegin \DIFaddB{errors. Strong }\DIFaddend performance on clean benchmark
+text may \DIFaddbegin \DIFaddB{therefore }\DIFaddend overestimate reliability in real-world use.
+
+Previous work has shown that typos can hurt LLM performance, often linking this
+effect to subword tokenization \citep{gan2024,chai2024,zhao2026}. However, these
+studies mainly focus on final-answer accuracy and do not examine what happens
+inside the reasoning process.
+
+Reasoning models make this question especially interesting. Their long reasoning
+traces give them many opportunities to notice a corrupted word, infer what was
+intended, and recover before producing the final answer. Do they actually do so?
+\DIFdelbegin \DIFdel{We study this question using a controlled two-axis experimental design.
+}\DIFdelend 
+
+To study this, our typo generator separates two factors: how many words are
+corrupted and what kind of corruption they contain. In particular, we vary the
+share of typos that accidentally produce another valid English word. This allows
+us to compare real-word and non-word typos while keeping the total number of
+typos fixed and using the same questions in every condition\DIFdelbegin \DIFdel{- }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend a comparison that\DIFdelbegin \DIFdel{previous work has }\DIFdelend \DIFaddbegin \DIFaddB{,
+to our knowledge, previous LLM typo studies have }\DIFaddend not made. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend We evaluate
+DeepSeek-R1-Distill-Qwen-7B \citep{deepseekr1} across the full set of conditions
+on three datasets with different reasoning characteristics\DIFdelbegin \DIFdel{. Beyond
+measuring final-answer accuracy, we also }\DIFdelend \DIFaddbegin \DIFaddB{, and }\DIFaddend examine the
+reasoning traces themselves using word-level alignment and an LLM judge.
+
+Our main contributions are: (i) a controlled experimental setup that
+independently varies typo rate and the proportion of real-word typos across
+three datasets\DIFdelbegin \DIFdel{, allowing us to directly compare real-word and non-word
+corruptions while keeping the overall typo rate fixed. }\DIFdelend \DIFaddbegin \DIFaddB{; }\DIFaddend (ii) an analysis of how typos affect the reasoning process
+itself, including \DIFdelbegin \DIFdel{changes in }\DIFdelend model uncertainty, whether the model notices corrupted words,
+and whether it \DIFdelbegin \DIFdel{attempts
+to repair them, }\DIFdelend \DIFaddbegin \DIFaddB{repairs them; }\DIFaddend and (iii) an evaluation of three simple mitigation
+strategies: warning the model that the input may contain typos, asking it to
+correct possible typos before solving the problem, and applying an external
+\DIFdelbegin \DIFdel{spellchecker
+before sending the prompt to }\DIFdelend \DIFaddbegin \DIFaddB{spell checker before }\DIFaddend the \DIFdelbegin \DIFdel{model.
+}\DIFdelend \DIFaddbegin \DIFaddB{model sees the question.
+}\DIFaddend 
+
+\DIFdelbegin %DIFDELCMD < \begin{figure}[tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{Our main findings are as follows. Typos cost up to 31 percentage points of
+accuracy on GSM8K, and the loss comes from wrong answers rather than truncated
+generations (\S\ref{sec:acc}). At a fixed number of typos, real-word typos are
+more harmful than non-word ones, by 1.3--5.3$\times$ per typo
+(\S\ref{sec:realword}). Contrary to our initial expectation that real-word
+typos would pass unnoticed, the model flags corrupted words, and hedges, more
+often as corruption grows, yet it also misreads more words and does not verify
+more (\S\ref{sec:repair}, \S\ref{sec:doubt}). Finally, none of the three
+mitigations reliably recovers the loss (\S\ref{sec:fixes}).
+}
+
+\begin{figure}[t]
+\DIFaddendFL \centering
+\DIFdelbeginFL %DIFDELCMD < \footnotesize
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \small
+\DIFaddendFL \setlength{\fboxsep}{5pt}
+\fbox{\DIFdelbeginFL %DIFDELCMD < \begin{minipage}{0.92\columnwidth}
+%DIFDELCMD < %%%
+\textbf{\DIFdelFL{Clean}} %DIFAUXCMD
+\DIFdelFL{(model answers 18, correct)
+}%DIFDELCMD < 
+
+%DIFDELCMD < \smallskip
+%DIFDELCMD < \noindent%%%
+\emph{\DIFdelFL{Janet's ducks lay 16 eggs per day. She eats three for breakfast
+every morning and bakes muffins for her friends every day with four. She sells
+the remainder at the farmers' market daily for \$2 per fresh duck egg. How much
+in dollars does she make every day at the farmers' market?}}
+%DIFAUXCMD
+%DIFDELCMD < 
+
+%DIFDELCMD < \medskip\hrule\medskip
+%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\textbf{\DIFdelFL{25\% typos, 40\% of them real words}} %DIFAUXCMD
+\DIFdelFL{(model answers 26, wrong)
+}%DIFDELCMD < 
+
+%DIFDELCMD < \smallskip
+%DIFDELCMD < \noindent%%%
+\emph{\DIFdelFL{Janet's }\textbf{\DIFdelFL{duck}} %DIFAUXCMD
+\DIFdelFL{lay 16 eggs per }\textbf{\DIFdelFL{adqy}}%DIFAUXCMD
+\DIFdelFL{.
+}\textbf{\DIFdelFL{Sje}} %DIFAUXCMD
+\textbf{\DIFdelFL{east}} %DIFAUXCMD
+\textbf{\DIFdelFL{rthere}} %DIFAUXCMD
+\DIFdelFL{for breakfast every morning and bakes
+muffins for }\textbf{\DIFdelFL{uher}} %DIFAUXCMD
+\textbf{\DIFdelFL{friend}} %DIFAUXCMD
+\DIFdelFL{every }\textbf{\DIFdelFL{azy}} %DIFAUXCMD
+\DIFdelFL{with four. She
+sells the remainder at the farmers' market daily for \$2 per }\textbf{\DIFdelFL{resh}} %DIFAUXCMD
+\DIFdelFL{duck
+egg. How much in dollars does she make every day at the }\textbf{\DIFdelFL{faremrs'}}
+%DIFAUXCMD
+\DIFdelFL{market?}}
+%DIFAUXCMD
+%DIFDELCMD < 
+
+%DIFDELCMD < \medskip
+%DIFDELCMD < \noindent%%%
+\texttt{\DIFdelFL{eats\arrow east \quad ducks\arrow duck \quad three\arrow rthere
+}%DIFDELCMD < \\ %%%
+\DIFdelFL{friends\arrow friend \quad fresh\arrow resh \quad her\arrow uher}}
+%DIFAUXCMD
+\DIFdelendFL \DIFaddbeginFL \begin{minipage}{0.93\columnwidth}
+\textbf{\DIFaddBFL{Clean (model answers 18, correct)}}\\[2pt]
+{\footnotesize \DIFaddBFL{Janet's ducks lay 16 eggs per day. She eats three for breakfast
+every morning and bakes muffins for her friends every day with four. She sells
+the remainder at the farmers' market daily for \$2 per fresh duck egg. How much
+in dollars does she make every day at the farmers' market?}}\\[6pt]
+\textbf{\DIFaddBFL{$r{=}25\%$, $\rho{=}40\%$ (model answers 26, wrong)}}\\[2pt]
+{\footnotesize \DIFaddBFL{Janet's \typo{duck} lay 16 eggs per \typo{adqy}.
+\typo{Sje} \typo{east} \typo{rthere} for breakfast every morning and bakes
+muffins for \typo{uher} \typo{friend} every \typo{azy} with four. She
+sells the remainder at the farmers' market daily for \$2 per \typo{resh} duck
+egg. How much in dollars does she make every day at the \typo{faremrs'}
+market?}}
+\DIFaddendFL \end{minipage}}
+\caption{A single GSM8K item under our generator. Numbers and \LaTeX{} are
+protected\DIFdelbeginFL \DIFdelFL{, and }\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{; }\DIFaddendFL only alphabetic words are corrupted. \DIFdelbeginFL \DIFdelFL{The two }\emph{\DIFdelFL{real-word}}
+%DIFAUXCMD
+\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{Three of the ten }\DIFaddendFL typos \DIFaddbeginFL \DIFaddBFL{are
+}\emph{\DIFaddBFL{real words}} \DIFaddendFL (\texttt{eats\arrow east}, \texttt{ducks\arrow duck}\DIFaddbeginFL \DIFaddBFL{,
+}\texttt{\DIFaddBFL{friends\arrow friend}}\DIFaddendFL ) \DIFaddbeginFL \DIFaddBFL{and }\DIFaddendFL are invisible to a spell checker. The model
+\DIFdelbeginFL \DIFdelFL{loses the ``three eaten'' quantity and }\DIFdelendFL answers 26 instead of 18.}
+\label{fig:example}
+\end{figure}
+
+% =====================================================================
+\section{Background and Related Work}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+\paragraph{Sensitivity to character-level typos.}
+\citet{belinkov2018} show that both synthetic and natural character-level noise
+substantially degrade neural machine translation, and that robustness to one
+type of noise does not necessarily transfer to others. Later work studied
+similar vulnerabilities in adversarial settings. HotFlip \citep{ebrahimi2018}
+shows that a few white-box character changes can alter a classifier's
+prediction, while TextFooler \citep{jin2020} generates black-box adversarial
+examples through word substitutions. PromptRobust \citep{zhu2024} shows that
+small \DIFaddbegin \DIFaddB{character- and word-level }\DIFaddend changes to task prompts can substantially
+reduce LLM performance\DIFdelbegin \DIFdel{,
+including changes at both the character and word levels}\DIFdelend . \citet{pruthi2019} defend against adversarial
+misspellings by placing a robust word-recognition model before the classifier\DIFdelbegin \DIFdel{. In one experiment,
+an adversarial character attack
+reduced BERT accuracy from 90.3\% to 45.8\%, while their defense recovered it to
+75\%. This approach is }\DIFdelend \DIFaddbegin \DIFaddB{,
+an approach }\DIFaddend closely related to the spell-checking mitigation we evaluate.
+
+\paragraph{Typos and modern LLMs.}
+\DIFdelbegin \DIFdel{Recent studies show that typos can substantially reduce LLM performance.
+}\DIFdelend \citet{gan2024} use an optimized adversarial search to inject typos into
+reasoning benchmarks such as GSM8K, BBH, and MMLU, and show that model accuracy
+drops substantially as the number of character-level errors increases.
+\citet{chai2024} show that character-level typos can hurt model performance
+partly because they change how words are split into subwords.
+\citet{zhao2026} study typo robustness across several languages and 18
+open-source models\DIFdelbegin \DIFdel{. They }\DIFdelend \DIFaddbegin \DIFaddB{, and }\DIFaddend find that typos hurt \DIFdelbegin \DIFdel{performance }\DIFdelend most on tasks that require
+generation or more complex reasoning.
+
+These studies measure final-answer accuracy rather than the reasoning process
+itself, and they vary typos by generation mechanism rather than by whether the
+corrupted form is itself a valid word. That distinction matters. A typo that
+creates a non-word, such as \texttt{triangle\arrow trianlge}, mainly affects
+tokenization, while a typo that creates another valid word, such as
+\texttt{sum\arrow sun}, leaves tokenization intact and changes the meaning of
+the sentence. Our study separates these cases and examines how the model
+responds to each during reasoning.
+
+\paragraph{Reasoning traces and self-correction.}
+Reasoning models such as DeepSeek-R1 \citep{deepseekr1} produce long reasoning
+traces before giving a final answer\DIFdelbegin \DIFdel{, allowing us to examine how they respond to
+errors during reasoning. However, these }\DIFdelend \DIFaddbegin \DIFaddB{. These }\DIFaddend traces do not always fully reflect
+the model's internal reasoning \citep{turpin2023}, and \DIFdelbegin \DIFdel{prior work shows that }\DIFdelend LLMs often struggle to
+correct their own reasoning without external feedback, sometimes even degrading
+their answers in the process \citep{huang2024}. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend Our setting asks a related but
+different question: can a long reasoning process help the model deal with errors
+that are already present in the input? A typo may be detectable from context,
+giving the model an opportunity to notice it, infer the intended word, and
+continue reasoning correctly.
+\DIFdelbegin \DIFdel{This allows us to
+study whether additional reasoning actually helps models recover from noisy
+input.
+}\DIFdelend 
+
+% =====================================================================
+\section{Method}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+\subsection{Controlled typo generation}
+
+We generate corrupted versions of each question by modifying only its
+natural-language text. Numbers, \LaTeX{} expressions, and \LaTeX{} command
+names are protected and never modified. Candidate words must consist only of
+ASCII letters, and we exclude single-character words and a small set of common
+function words.
+
+The generator varies two factors independently. The typo rate $r$ determines
+how many eligible words are corrupted, while the real-word ratio $\rho$
+determines the target fraction of those corruptions that should result in
+another valid English word. For example, \texttt{eats}~\arrow~\texttt{east}
+is a real-word typo, while \texttt{ducks}~\arrow~\texttt{dcks} is a non-word
+typo. Words are selected for corruption before $\rho$ is applied, so for a
+fixed typo rate the number of corrupted words is identical across all values
+of $\rho$.
+
+Each corrupted word receives a character-level edit sampled with weights 0.40
+adjacent-key substitution, 0.20 deletion, 0.20 insertion, and 0.20
+transposition. With probability 0.10, a second edit is applied to the same
+word.
+
+For each question, we convert $\rho$ into a target number of real-word typos,
+using probabilistic rounding when the target is not an integer. We then process
+the selected words in random order. While the target has not been reached, the
+generator searches for valid real-word variants using the NLTK English lexicon.
+If none exists for a selected word, that word receives a non-word typo and the
+generator continues trying to satisfy the target with the remaining words. Any
+real word produced accidentally is counted toward the target. Because the
+selected words are not chosen based on whether a real-word variant exists, the
+requested ratio cannot always be reached exactly\DIFdelbegin \DIFdel{. In these cases, the generator }\DIFdelend \DIFaddbegin \DIFaddB{; the generator then }\DIFaddend gets as
+close to the target as the selected words allow.
+Table~\ref{tab:datastats} reports the achieved ratios.
+
+For each benchmark, we create a clean condition that is identical to the
+original dataset, together with nine corrupted conditions. These combine typo
+rates $r \in \{25, 50, 75\}\%$ with real-word ratios
+$\rho \in \{10, 40, 70\}\%$. The generator is seeded consistently across
+conditions, and the same questions are used in every condition, allowing direct
+paired comparisons. The resulting dataset variants are available on the Hugging
+Face Hub.
+
+\subsection{Datasets}
+
+We use 500 questions from each of three benchmarks: GSM8K \citep{cobbe2021},
+MATH-500 \citep{hendrycks2021,lightman2024}, and ARC-Challenge
+\citep{clark2018}. \DIFdelbegin \DIFdel{We chose these datasets because they }\DIFdelend \DIFaddbegin \DIFaddB{They }\DIFaddend differ in how much of the information needed to solve a
+question is expressed in natural-language text. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend GSM8K contains arithmetic word
+problems \DIFdelbegin \DIFdel{in which most of the problem }\DIFdelend \DIFaddbegin \DIFaddB{whose }\DIFaddend structure is described \DIFdelbegin \DIFdel{in prose. Its questions are also relatively long, so more words
+are available for corruption}\DIFdelend \DIFaddbegin \DIFaddB{almost entirely in prose, and its
+questions are relatively long}\DIFaddend . MATH-500 contains \DIFdelbegin \DIFdel{competition mathematics
+problems
+that are shorter and contain }\DIFdelend \DIFaddbegin \DIFaddB{shorter competition problems
+with }\DIFaddend substantial \LaTeX{} content, which \DIFdelbegin \DIFdel{is
+protected by our generator }\DIFdelend \DIFaddbegin \DIFaddB{our generator protects}\DIFaddend . ARC-Challenge
+contains short\DIFdelbegin \DIFdel{er}\DIFdelend  multiple-choice science questions, \DIFdelbegin \DIFdel{where the answer options provide additional information that
+}\DIFdelend \DIFaddbegin \DIFaddB{whose answer options }\DIFaddend may help
+the model interpret a corrupted question.
+
+\DIFdelbegin \DIFdel{These differences mean that }\DIFdelend \DIFaddbegin \DIFaddB{As a result, }\DIFaddend the same typo rate does not produce the same absolute number of
+typos across datasets\DIFdelbegin \DIFdel{. }\DIFdelend \DIFaddbegin \DIFaddB{: }\DIFaddend GSM8K receives the most corruption per question
+\DIFdelbegin \DIFdel{, while MATH-500 and ARC-Challenge receive fewer corruptions
+because they contain fewer eligible words}\DIFdelend \DIFaddbegin \DIFaddB{(Table~\ref{tab:datastats})}\DIFaddend . We therefore compare corruption levels within each
+dataset rather than \DIFdelbegin \DIFdel{treating a given typo rate as the same
+absolute amount of noise across all three benchmarks.
+Table~\ref{tab:datastats} reports the resulting corruption statistics.
+}\DIFdelend \DIFaddbegin \DIFaddB{across benchmarks.
+}\DIFaddend 
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{table}[t]
+\DIFaddendFL \centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\adjustbox{max width=\linewidth}{\begin{tabular}{lrrr}
+\toprule
+ & GSM8K & MATH-500 & ARC-C \\
+\midrule
+questions & 500 & 500 & 500 \\
+mean words per question & 45.8 & 31.5 & 23.5 \\
+median words per question & 43 & 26 & 20 \\
+eligible words per question & 30.6 & 15.7 & 16.6 \\
+\midrule
+typos per question, $r{=}25\%$ & 7.6 & 4.0 & 4.2 \\
+typos per question, $r{=}50\%$ & 15.3 & 7.9 & 8.3 \\
+typos per question, $r{=}75\%$ & 22.9 & 11.8 & 12.4 \\
+\midrule
+achieved real-word ratio, $\rho{=}10\%$ & 0.100 & 0.099 & 0.102 \\
+achieved real-word ratio, $\rho{=}40\%$ & 0.399 & 0.397 & 0.401 \\
+achieved real-word ratio, $\rho{=}70\%$ & 0.698 & 0.681 & 0.682 \\
+\midrule
+total corrupted words & 68{,}739 & 35{,}685 & 37{,}248 \\
+\bottomrule
+\end{tabular}}
+\caption{Dataset and corruption statistics over the nine corrupted conditions
+($r\in\{25,50,75\}\%$, $\rho\in\{10,40,70\}\%$), first 500 questions \DIFdelbeginFL \DIFdelFL{per
+benchmark}\DIFdelendFL \DIFaddbeginFL \DIFaddGFL{of GSM8K
+and ARC-Challenge and all of MATH-500}\DIFaddendFL . \emph{Eligible words} are those the
+generator may corrupt, after protected spans, single-character words and
+function words are removed; the typo rate applies to them, and real-word ratios
+are pooled over all corrupted words.}
+\label{tab:datastats}
+\end{table}
+
+% =====================================================================
+\section{Experimental Setup}
+%DIF <  AUTHOR TEXT - verbatim.
+\DIFaddbegin \label{sec:setup}
+\DIFaddend % =====================================================================
+
+\paragraph{Models.}
+We use DeepSeek-R1-Distill-Qwen-7B \citep{deepseekr1}\DIFdelbegin \DIFdel{as our main model and
+access it }\DIFdelend \DIFaddbegin \DIFaddB{, accessed }\DIFaddend through the
+Hugging Face API\DIFdelbegin \DIFdel{. We run it }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend with temperature 0.6 and top-$p$ 0.95 \DIFdelbegin \DIFdel{, using the default settings from the model card, and generate one
+response per question. We use the recommended decoding settings to better
+}\DIFdelend \DIFaddbegin \DIFaddB{(the model-card
+defaults, to }\DIFaddend reflect how a typical user would \DIFdelbegin \DIFdel{interact with the model, rather than tuning
+them specifically for our evaluation. For each dataset, we set the }\DIFdelend \DIFaddbegin \DIFaddB{run it) and one response per
+question. The }\DIFaddend maximum generation length \DIFdelbegin \DIFdel{to a value that }\DIFdelend \DIFaddbegin \DIFaddG{is 20}{\DIFaddB{,}}\DIFaddB{000 tokens for GSM8K and
+17}{\DIFaddB{,}}\DIFaddB{000 for MATH-500 and ARC-Challenge, which }\DIFaddend we found sufficient for the model
+to \DIFdelbegin \DIFdel{produce
+complete answers for a large enough portion of the questions. }\footnote{\DIFdel{In
+practice this is 20}%DIFDELCMD < {%%%
+\DIFdel{,}%DIFDELCMD < }%%%
+\DIFdel{000 generated tokens for GSM8K and 17}%DIFDELCMD < {%%%
+\DIFdel{,}%DIFDELCMD < }%%%
+\DIFdel{000 for MATH-500
+and ARC-Challenge.}}
+%DIFAUXCMD
+\addtocounter{footnote}{-1}%DIFAUXCMD
+%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFaddB{finish on a large majority of questions. }\DIFaddend For the LLM-based evaluation \DIFdelbegin \DIFdel{, }\DIFdelend we use
+Llama-3.3-70B-Instruct \citep{llama3}, also through the Hugging Face API, with
+temperature 0.
+
+\paragraph{Prompts.}
+For math problems, we provide the question followed by the instruction:
+``Please reason step by step, and put your final answer within
+\texttt{\textbackslash boxed\{\}}.'' For multiple-choice questions, we present
+the four answer options with shuffled labels and ask the model to return the
+final answer as a boxed letter. Typos are added only to the question itself,
+while the instruction remains unchanged and typo-free.
+
+\paragraph{Scoring.}
+We extract the final answer only from the text produced after the closing
+\texttt{</think>} tag. Responses that reach the token limit without producing a
+final answer are marked as unanswered. GSM8K is evaluated using normalized
+numeric matching, MATH-500 using symbolic equivalence with
+\texttt{math\_verify}, and ARC using exact answer-letter matching. We report
+accuracy over answered questions \DIFdelbegin \DIFdel{and separately report }\DIFdelend \DIFaddbegin \DIFaddB{together with }\DIFaddend the number of answered
+responses\DIFaddbegin \DIFaddB{, and check the effect of truncation with strict accuracy, which
+counts unanswered responses as wrong}\DIFaddend .
+
+\paragraph{Statistics.}
+Since each condition contains the same 500 questions, we use paired \DIFdelbegin \DIFdel{statistical
+}\DIFdelend tests. We
+\DIFdelbegin \DIFdel{report the number of }\DIFdelend \DIFaddbegin \DIFaddB{count the }\DIFaddend questions that change from correct to incorrect and from incorrect to
+correct, and \DIFdelbegin \DIFdel{use a continuity-corrected McNemar test to
+}\DIFdelend compare these paired outcomes \DIFdelbegin \DIFdel{. This analysis helps separate }\DIFdelend \DIFaddbegin \DIFaddB{with a continuity-corrected McNemar
+test, which separates }\DIFaddend the effect of typos from differences in question
+difficulty\DIFdelbegin \DIFdel{, since each comparison is made on the same set of questions}\DIFdelend \DIFaddbegin \DIFaddB{. Tables report uncorrected $p$-values; in the text we also state
+which results survive a Holm correction over the nine tests of each family
+within a dataset}\DIFaddend .
+
+\paragraph{Reasoning trace analysis.}
+We analyze the \DIFdelbegin \DIFdel{model's }\DIFdelend reasoning traces in three ways. First, \DIFdelbegin \DIFdel{we use }\DIFdelend word-level alignment
+\DIFdelbegin \DIFdel{to track }\DIFdelend \DIFaddbegin \DIFaddB{tracks }\DIFaddend how the model handles each corrupted word\DIFdelbegin \DIFdel{. We check }\DIFdelend \DIFaddbegin \DIFaddB{: }\DIFaddend whether the trace uses the
+original word, the corrupted \DIFdelbegin \DIFdel{version, or an explicit
+correction, and classify }\DIFdelend \DIFaddbegin \DIFaddB{form, or both, classifying }\DIFaddend each typo as silently
+fixed, flagged, misread, or not used \DIFdelbegin \DIFdel{.
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFaddB{(\S\ref{sec:repair}). }\DIFaddend Second, we \DIFdelbegin \DIFdel{measure self-doubt directly from the reasoning traces. We define sets
+of words and phrases associated with uncertainty and self-correction, and count
+how often they appear in each trace. Since traces differ in length, we normalize
+these counts }\DIFdelend \DIFaddbegin \DIFaddB{count
+curated uncertainty and second-guessing expressions, normalized }\DIFaddend by trace length
+\DIFdelbegin \DIFdel{. We then compare these measures across typo
+conditions and between correct and incorrect answers to examine whether higher
+uncertainty is associated with model failure.
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Third, we use }\DIFdelend \DIFaddbegin \DIFaddB{(\S\ref{sec:doubt}). Third, }\DIFaddend an LLM judge \DIFdelbegin \DIFdel{. The judge receives the clean
+question, the corrupted question , the list of changed words}\DIFdelend \DIFaddbegin \DIFaddB{receives the list of corrupted words
+with their originals, the question as shown to the model}\DIFaddend , and the \DIFdelbegin \DIFdel{model's
+reasoning
+trace }\DIFdelend \DIFaddbegin \DIFaddG{reasoning
+trace (its first and last 2}{\DIFaddB{,}}\DIFaddB{000 characters)}\DIFaddend . Using a \DIFdelbegin \DIFdel{predefined evaluation prompt}\DIFdelend \DIFaddbegin \DIFaddB{fixed rubric}\DIFaddend , it assigns
+a \DIFdelbegin \DIFdel{self-doubt
+}\DIFdelend \DIFaddbegin \emph{\DIFaddB{self-doubt}} \DIFaddend score from 0 \DIFaddbegin \DIFaddB{(a clear, straight-line solution) }\DIFaddend to 10
+\DIFdelbegin \DIFdel{, which measures the ``amount of unambiguity'' and a repair
+behavior }\DIFdelend \DIFaddbegin \DIFaddB{(pervasive uncertainty, reversals or looping), and a }\emph{\DIFaddB{repair}} \DIFaddend score from 0
+\DIFaddbegin \DIFaddB{(the intended meaning of the question is fully understood) }\DIFaddend to 5 \DIFdelbegin \DIFdel{which measures how much the model
+understands the real meaningof the question. }\DIFdelend \DIFaddbegin \DIFaddB{(the model
+reasons from the wrong meaning). Higher is worse on both scales. The judge
+scores answered traces only.
+}\DIFaddend 
+
+% =====================================================================
+\section{Results}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+\subsection{Effect of typos on accuracy}
+\DIFaddbegin \label{sec:acc}
+\DIFaddend 
+
+\DIFaddbegin \begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_accuracy.pdf}
+\caption{\textbf{\DIFaddBFL{The accuracy tax.}} \emph{\DIFaddBFL{(a)}} \DIFaddBFL{answered-only accuracy against
+the typo rate; the line is the mean over the three real-word ratios and the band
+spans them. }\emph{\DIFaddBFL{(b)}} \DIFaddBFL{the same as a change from clean, in percentage points.
+}\emph{\DIFaddBFL{(c)}} \DIFaddBFL{mean generated tokens relative to clean. Accuracy falls with the typo
+rate on all three datasets and falls fastest on GSM8K, where the text carries
+the whole problem. On average, reasoning gets }\emph{\DIFaddBFL{longer}} \DIFaddBFL{under typos, so the
+loss is not the model giving up early.}}
+\label{fig:accuracy}
+\end{figure*}
+
+\DIFaddend Figure~\ref{fig:accuracy} and Table~\ref{tab:grid} in the appendix show the full
+results. On GSM8K, answered-only accuracy drops from 91.4\% on clean questions
+to 60.4\% in the most corrupted condition ($r{=}75$, $\rho{=}70$), a decrease of
+31.0 \DIFdelbegin \DIFdel{percent. ARC shows a smaller drop }\DIFdelend \DIFaddbegin \DIFaddB{percentage points. ARC drops }\DIFaddend from 84.7\% to 74.7\%, \DIFdelbegin \DIFdel{while
+}\DIFdelend \DIFaddbegin \DIFaddB{and }\DIFaddend MATH-500 \DIFdelbegin \DIFdel{drops }\DIFdelend from
+95.2\% to 86.9\%. \DIFdelbegin \DIFdel{Overall, accuracy decreases as the typo
+rate increases across all three datasets (Figure~\ref{fig:accuracy}) }\DIFdelend \DIFaddbegin \DIFaddG{On all three datasets accuracy is lowest at the highest typo
+rate, although on ARC the mildest rate ($r{=}25$) is still on par with clean}\DIFaddend .
+
+The paired analysis shows the same trend. In the most corrupted GSM8K condition,
+164 questions change from correct to incorrect, while only 14 change from
+incorrect to correct, out of 480 questions answered in both conditions
+($p < 10^{-6}$). ARC shows 75 correct-to-incorrect versus 26
+incorrect-to-correct changes, and MATH-500 shows 46 versus 7, both
+\DIFdelbegin \DIFdel{statistically
+significant. }\DIFdelend \DIFaddbegin \DIFaddB{significant. After Holm correction, all nine }\DIFaddend GSM8K \DIFdelbegin \DIFdel{is affected even at the mildest typo condition, while
+significanteffects appear only at higher typo rates for }\DIFdelend \DIFaddbegin \DIFaddB{conditions remain
+significant, against four on }\DIFaddend MATH-500 \DIFdelbegin \DIFdel{and ARC
+(Table~\ref{tab:grid}). }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFaddB{(all at $r \geq 50$) and two on ARC (both
+at $r{=}75$). }\DIFaddend One possible explanation \DIFdelbegin \DIFdel{for these differences }\DIFdelend is how much each task depends on the
+wording of the question\DIFdelbegin \DIFdel{. }\DIFdelend \DIFaddbegin \DIFaddB{: }\DIFaddend GSM8K problems rely \DIFdelbegin \DIFdel{heavily }\DIFdelend on the text to describe the
+quantities and relationships needed for the solution\DIFdelbegin \DIFdel{. ARCprovides
+multiple-choice options that }\DIFdelend \DIFaddbegin \DIFaddB{, ARC's answer options }\DIFaddend may
+help the model recover some information, \DIFdelbegin \DIFdel{while
+}\DIFdelend \DIFaddbegin \DIFaddB{and }\DIFaddend much of the \DIFdelbegin \DIFdel{important mathematical content
+in }\DIFdelend \DIFaddbegin \DIFaddB{mathematical content
+of }\DIFaddend MATH-500 is written in protected \LaTeX{}\DIFdelbegin \DIFdel{and is therefore not affected by our typo generator}\DIFdelend .
+
+\DIFdelbegin \DIFdel{Typos also lead to longer reasoning traces across all three datasets, while
+the model still produces final answers in most cases. On }\DIFdelend \DIFaddbegin \DIFaddB{Truncation does not explain the loss. Counting unanswered responses as wrong,
+}\DIFaddend GSM8K \DIFdelbegin \DIFdel{, for example, the average reasoninglength increases }\DIFdelend \DIFaddbegin \DIFaddG{accuracy falls from 91.4\% to 58.0\%; of this strict drop at $r{=}75$,
+$\rho{=}70$, 93\% comes from answered-but-wrong responses and only 7\% from
+truncation, and on MATH-500 and ARC truncation contributes nothing. Typos also
+lengthen the reasoning: on GSM8K the mean trace grows }\DIFaddend from 1,582 tokens on clean
+questions to 2,\DIFaddbegin \DIFaddB{306 in the most corrupted condition (and up to 2,}\DIFaddend 594 \DIFdelbegin \DIFdel{tokens }\DIFdelend at
+$r{=}75$, $\rho{=}40$\DIFaddbegin \DIFaddB{)}\DIFaddend , with smaller increases on MATH-500 and ARC. \DIFdelbegin \DIFdel{This suggests that the drop in accuracy is driven mainly by incorrect
+answers rather than incomplete generations. In fact, wrong answers tend to have longer reasoning }\DIFdelend \DIFaddbegin \DIFaddB{Wrong
+answers have longer }\DIFaddend traces than correct ones \DIFdelbegin \DIFdel{, indicating that }\DIFdelend \DIFaddbegin \DIFaddB{in every configuration, so
+}\DIFaddend additional reasoning is \DIFdelbegin \DIFdel{more closely }\DIFdelend associated with difficulty \DIFaddbegin \DIFaddB{rather }\DIFaddend than with successful
+recovery (Figure~\ref{fig:accuracy}c; Table~\ref{tab:support}).
+
+\DIFdelbegin %DIFDELCMD < \begin{figure*}[tbp]
+%DIFDELCMD < \centering
+%DIFDELCMD < \includegraphics[width=\textwidth]{figures/fig_accuracy.pdf}
+%DIFDELCMD < %%%
+%DIFDELCMD < \caption{%
+{%DIFAUXCMD
+\textbf{\DIFdelFL{The accuracy tax.}} %DIFAUXCMD
+\emph{\DIFdelFL{(a)}} %DIFAUXCMD
+\DIFdelFL{answered-only accuracy against
+the typo rate; the line is the mean over the three real-word ratios and the band
+spans them. }\emph{\DIFdelFL{(b)}} %DIFAUXCMD
+\DIFdelFL{the same as a change from clean, in percentage points.
+}\emph{\DIFdelFL{(c)}} %DIFAUXCMD
+\DIFdelFL{mean generated tokens relative to clean. Accuracy falls with the typo
+rate on all three datasets and falls fastest on GSM8K, where the text carries
+the whole problem. Reasoning gets }\emph{\DIFdelFL{longer}} %DIFAUXCMD
+\DIFdelFL{under typos everywhere, so the
+loss is not the model giving up early.}}
+%DIFAUXCMD
+%DIFDELCMD < \label{fig:accuracy}
+%DIFDELCMD < \end{figure*}
+%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \subsection{Real-word typos are more harmful}
+\DIFaddbegin \label{sec:realword}
+\DIFaddend 
+
+\DIFdelbegin %DIFDELCMD < \begin{figure}[!tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{figure}[t]
+\DIFaddendFL \centering
+\includegraphics[width=\columnwidth]{figures/fig_realword.pdf}
+\caption{\textbf{The real-word effect.} \emph{(a)} multiplicative loss in the
+odds of a correct answer per additional typo, from a logistic regression fitting
+real-word and non-word counts separately. \emph{(b)} the controlled paired
+comparison: the same questions with the same number of typos, changing only the
+real-word share from $\rho{=}10$ to $\rho{=}70$. $^{*}$ marks McNemar
+$p<0.05$ \DIFaddbeginFL \DIFaddBFL{(uncorrected)}\DIFaddendFL .}
+\label{fig:realword}
+\end{figure}
+
+Because typo rate and real-word ratio are varied independently, we can compare
+real-word and non-word typos while controlling for the total number of typos.
+For each dataset, we fit a logistic regression \DIFdelbegin \DIFdel{using the }\DIFdelend \DIFaddbegin \DIFaddB{that predicts whether the final
+answer is correct from the }\DIFaddend number of real-word and non-word typos
+\DIFdelbegin \DIFdel{to predict whether the final answer is correct
+}\DIFdelend (Figure~\ref{fig:realword}a). \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{The results show that an }\DIFdelend \DIFaddbegin \DIFaddB{An }\DIFaddend additional real-word typo has a stronger
+negative association with correctness than an additional non-word typo\DIFdelbegin \DIFdel{. Based on the
+estimated odds multipliers from the logistic regression, the }\DIFdelend \DIFaddbegin \DIFaddB{: the
+}\DIFaddend relative per-typo loss is about 1.9$\times$ larger on GSM8K, 1.3$\times$ on
+MATH-500, and 5.3$\times$ on ARC (Table~\ref{tab:realword-logit}).
+
+The paired comparisons support this pattern, although the effect depends on the
+overall typo rate. On GSM8K at a 75\% typo rate, increasing the real-word share
+from 10\% to 70\% lowers accuracy by 14.1 percentage points, even though the
+same questions contain the same total number of typos. The difference is also
+significant at a 50\% typo rate \DIFaddbegin \DIFaddB{(both after Holm correction)}\DIFaddend , but not at 25\%.
+\DIFdelbegin \DIFdel{This suggests that when
+corruption is relatively }\DIFdelend \DIFaddbegin \DIFaddB{When corruption is }\DIFaddend mild, the model can often handle both \DIFdelbegin \DIFdel{real-word and
+non-word typos, while the
+difference between the two }\DIFdelend \DIFaddbegin \DIFaddB{kinds of typo, and the
+difference }\DIFaddend becomes more pronounced as the overall typo rate increases
+(Figure~\ref{fig:realword}b; Table~\ref{tab:realword-paired}). \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{ARCshows a significant real-word effect at the highest typo rate, while
+}\DIFdelend \DIFaddbegin \DIFaddG{On ARC, the
+effect is significant at $r{=}75$ ($-6.7$\pp{}, surviving correction); two
+contrasts at $r{=}25$ reach $p<0.05$ but do not survive correction, and none at
+$r{=}50$ does. }\DIFaddend MATH-500 \DIFdelbegin \DIFdel{does not show a }\DIFdelend \DIFaddbegin \DIFaddB{shows no }\DIFaddend significant difference at any typo rate\DIFdelbegin \DIFdel{. This is
+consistent with the }\DIFdelend \DIFaddbegin \DIFaddB{,
+consistent with its }\DIFaddend smaller number of corrupted words\DIFdelbegin \DIFdel{in MATH-500 questions,
+since much of their mathematical content is protected from modification.
+All
+nine contrasts, for all three datasets, are in
+Table~\ref{tab:realword-paired}.
+}\DIFdelend \DIFaddbegin \DIFaddB{.
+}\DIFaddend 
+
+Overall, \DIFdelbegin \DIFdel{the results suggest that }\DIFdelend real-word typos \DIFdelbegin \DIFdel{can be }\DIFdelend \DIFaddbegin \DIFaddB{appear }\DIFaddend especially difficult for the model. Unlike
+non-word typos, which \DIFdelbegin \DIFdel{often }\DIFdelend produce visibly unusual word forms, \DIFdelbegin \DIFdel{real-word typos }\DIFdelend \DIFaddbegin \DIFaddB{they }\DIFaddend result in valid
+words and can \DIFdelbegin \DIFdel{therefore }\DIFdelend change the meaning of the input without creating an obvious
+tokenization problem.
+
+\subsection{Repair behavio\DIFdelbegin \DIFdel{u}\DIFdelend r : noticed but not repaired}
+\DIFaddbegin \label{sec:repair}
+\DIFaddend 
+
+\DIFdelbegin %DIFDELCMD < \begin{figure*}[!tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{figure*}[t]
+\DIFaddendFL \centering
+\includegraphics[width=\textwidth]{figures/fig_repair.pdf}
+\caption{\DIFdelbeginFL \textbf{\DIFdelFL{Word-level repair behaviour.}} %DIFAUXCMD
+\DIFdelendFL \DIFaddbeginFL \textbf{\DIFaddBFL{Word-level repair behavior.}} \DIFaddendFL How every corrupted word is
+handled in the reasoning trace. \emph{(a)} against the typo rate, pooled over
+real-word ratios. \emph{(b)} against the real-word ratio, pooled over typo
+rates. \DIFdelbeginFL \DIFdelFL{Section~5.3 claims a trend on both axes and both are present: silent
+}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{Silent }\DIFaddendFL fixing gives way to explicit flagging and to \DIFdelbeginFL \DIFdelFL{outright }\DIFdelendFL misreading as either
+\DIFdelbeginFL \DIFdelFL{knob is turned up}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{the typo rate or the real-word ratio increases}\DIFaddendFL , while the share \DIFaddbeginFL \DIFaddBFL{of words }\DIFaddendFL never
+referred to \DIFdelbeginFL \DIFdelFL{at all }\DIFdelendFL stays roughly constant. Per-configuration values are in
+Table~\ref{tab:repair}.}
+\label{fig:repair}
+\end{figure*}
+
+We recover each corrupted word by comparing the clean and corrupted versions of
+the question, and \DIFdelbegin \DIFdel{then }\DIFdelend classify how the model handles it in the reasoning trace:
+\DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < \begin{itemize}\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+%DIFDELCMD <   \item %%%
+\DIFdelend \textbf{silent fix}\DIFdelbegin \DIFdel{: }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend only the original word appears \DIFdelbegin \DIFdel{, suggesting that }\DIFdelend \DIFaddbegin \DIFaddB{(}\DIFaddend the model recovered the
+intended word without \DIFdelbegin \DIFdel{explicitly }\DIFdelend mentioning the typo\DIFdelbegin %DIFDELCMD < \item %%%
+\DIFdelend \DIFaddbegin \DIFaddB{); }\DIFaddend \textbf{flagged}\DIFdelbegin \DIFdel{: }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend both the original
+and \DIFdelbegin \DIFdel{corrupted forms appear ,
+  indicating that }\DIFdelend \DIFaddbegin \DIFaddB{the corrupted form appear (}\DIFaddend the model noticed \DIFdelbegin \DIFdel{the typo and corrected it
+  }%DIFDELCMD < \item %%%
+\DIFdelend \DIFaddbegin \DIFaddB{and corrected the typo);
+}\DIFaddend \textbf{misread}\DIFdelbegin \DIFdel{: }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend only the corrupted form appears \DIFdelbegin \DIFdel{, suggesting that the model interpreted }\DIFdelend \DIFaddbegin \DIFaddB{(the model took }\DIFaddend it as the
+wrong word\DIFdelbegin %DIFDELCMD < \item %%%
+\DIFdelend \DIFaddbegin \DIFaddB{); and }\DIFaddend \textbf{not used}\DIFdelbegin \DIFdel{: }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend neither form appears\DIFdelbegin \DIFdel{in the reasoning trace
+}%DIFDELCMD < \end{itemize}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFaddB{.
+}\DIFaddend 
+
+We originally expected real-word typos to go unnoticed more often, while
+non-word typos would be easier to detect and correct explicitly. The results
+only partly support this prediction. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Both a higher typo rate and a higher real-word ratio change the way the model
+handles corrupted words. }\DIFdelend As the typo rate increases from 25\% to
+75\%, silent fixing decreases \DIFdelbegin \DIFdel{across }\DIFdelend \DIFaddbegin \DIFaddB{on }\DIFaddend all three datasets\DIFdelbegin \DIFdel{. On }\DIFdelend \DIFaddbegin \DIFaddB{; on }\DIFaddend GSM8K, for example, it
+falls from 73.3\% to 55.8\% at $\rho{=}10$. \DIFdelbegin \DIFdel{Similar decreases appear on ARC and MATH-500.
+}\DIFdelend At the same time, flagging and
+misreading become more common\DIFdelbegin \DIFdel{, and misreading roughly doubles on all three datasets }\DIFdelend \DIFaddbegin \DIFaddG{: pooled over real-word ratios, misreading rises
+from 4.0\% to 8.3\% on GSM8K and from 1.5\% to 2.9\% on MATH-500, and less
+steeply on ARC, from 3.5\% to 5.1\% }\DIFaddend (Figure~\ref{fig:repair};
+Table~\ref{tab:repair}).
+
+Increasing the real-word ratio \DIFdelbegin \DIFdel{produces }\DIFdelend \DIFaddbegin \DIFaddB{has }\DIFaddend a similar effect. Pooled across typo rates on
+GSM8K, silent fixing falls from 62.3\% to 52.9\% as $\rho$ increases from 10 to
+70, while flagging rises from 21.0\% to 26.8\% and misreading from 5.4\% to
+7.7\%\DIFdelbegin \DIFdel{. The }\DIFdelend \DIFaddbegin \DIFaddB{; the }\DIFaddend same overall pattern appears on MATH-500 and ARC. Misreading is also
+\DIFdelbegin \DIFdel{closely }\DIFdelend related to failure: \DIFdelbegin \DIFdel{it occurs }\DIFdelend \DIFaddbegin \DIFaddB{in every configuration it is }\DIFaddend 1.2 to 2.0 times more \DIFdelbegin \DIFdel{often in incorrect answers than in correct ones }\DIFdelend \DIFaddbegin \DIFaddG{frequent
+in GSM8K traces that end in a wrong answer, and 1.2 to 2.4 times on ARC; on
+MATH-500, where misreads are rare, the relation is not consistent
+}\DIFaddend (Table~\ref{tab:repair}). \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{The proportion of typos classified as not used remains relatively }\DIFdelend \DIFaddbegin \DIFaddB{The share of typos that are not used stays }\DIFaddend stable
+within each dataset \DIFdelbegin \DIFdel{, }\DIFdelend but differs across tasks\DIFdelbegin \DIFdel{: }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend roughly 12\% on GSM8K, 13\% on
+ARC, and 19\% on MATH-500\DIFdelbegin \DIFdel{. One possible explanation is that }\DIFdelend \DIFaddbegin \DIFaddB{, possibly because }\DIFaddend MATH-500 reasoning \DIFdelbegin \DIFdel{relies
+more heavily on symbolic
+manipulation, so the model }\DIFdelend \DIFaddbegin \DIFaddB{is more symbolic
+and }\DIFaddend refers back to \DIFdelbegin \DIFdel{individual
+words from the original }\DIFdelend \DIFaddbegin \DIFaddB{the wording of the }\DIFaddend question less often\DIFdelbegin \DIFdel{(Figure~\ref{fig:repair})}\DIFdelend .
+
+\DIFdelbegin \DIFdel{In the LLM-as-a-judge analysis, a separate language model examined each
+reasoning trace and assigned a score for repair behaviour. The judgewas shown
+the corrupted words, the question, and the model's reasoning trace. It then gave
+a score from 0 to 5: 0 means that the
+model fully understood the meaning of the
+question, while 5 means that it completely failed to understand the intended
+meaning. We then calculated the mean score for different typo rates, real-word
+ratios, and final-answer outcomes.
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{The results show that more typos generally make the question harder to
+understand and repair. The average repair-understanding score increases as the
+typo raterises, meaning that the model loses more of the original meaning when
+more words are corrupted. Wrong answers also receive higher average
+repair-understanding scores than
+correct answers, supporting the connection
+between misunderstanding }\DIFdelend \DIFaddbegin \DIFaddG{The judge's repair score (\S\ref{sec:setup}; Table~\ref{tab:judge}) tells the
+same story. It rises with the typo rate, and wrong answers score higher than
+correct ones (2.30 vs.\ 0.87 on GSM8K), linking misunderstanding of }\DIFaddend the
+corrupted question \DIFdelbegin \DIFdel{and failure. The }\DIFdelend \DIFaddbegin \DIFaddB{to failure. It also rises with the }\DIFaddend real-word ratio \DIFdelbegin \DIFdel{has an additional effect: }\DIFdelend \DIFaddbegin \DIFaddB{in every
+dataset and typo-rate cell, consistent with }\DIFaddend real-word \DIFdelbegin \DIFdel{typos look valid and can silently
+change the meaning of a sentence, making them harder to
+detect and repairthan
+obviously invalid non-word typos (Table~\ref{tab:judge})}\DIFdelend \DIFaddbegin \DIFaddB{typos being harder to
+repair, although we did not test this trend for significance}\DIFaddend .
+
+\subsection{Self-doubt}
+\DIFaddbegin \label{sec:doubt}
+\DIFaddend 
+
+\DIFaddbegin \begin{table}[t]
+\centering
+\footnotesize
+\adjustbox{max width=\linewidth}{\begin{tabular}{l rr rr rr}
+\toprule
+& \multicolumn{2}{c}{\textbf{\DIFaddBFL{GSM8K}}} & \multicolumn{2}{c}{\textbf{\DIFaddBFL{MATH-500}}} & \multicolumn{2}{c}{\textbf{\DIFaddBFL{ARC-C}}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\textbf{\DIFaddBFL{condition}} & \DIFaddBFL{repair }& \DIFaddBFL{doubt }& \DIFaddBFL{repair }& \DIFaddBFL{doubt }& \DIFaddBFL{repair }& \DIFaddBFL{doubt }\\
+\midrule
+\multicolumn{7}{l}{\emph{\DIFaddBFL{clean}}} \\
+\DIFaddBFL{\quad --- }& \DIFaddBFL{0.13 }& \DIFaddBFL{4.50 }& \DIFaddBFL{0.03 }& \DIFaddBFL{3.66 }& \DIFaddBFL{0.03 }& \DIFaddBFL{4.69 }\\
+\midrule \multicolumn{7}{l}{\emph{\DIFaddBFL{by typo rate }}\DIFaddBFL{$r$}} \\
+\DIFaddBFL{\quad 25\% }& \DIFaddBFL{0.88 }& \DIFaddBFL{4.86 }& \DIFaddBFL{0.35 }& \DIFaddBFL{3.90 }& \DIFaddBFL{0.97 }& \DIFaddBFL{5.12 }\\
+\DIFaddBFL{\quad 50\% }& \DIFaddBFL{1.27 }& \DIFaddBFL{5.12 }& \DIFaddBFL{0.35 }& \DIFaddBFL{3.98 }& \DIFaddBFL{1.03 }& \DIFaddBFL{5.31 }\\
+\DIFaddBFL{\quad 75\% }& \DIFaddBFL{1.74 }& \DIFaddBFL{5.64 }& \DIFaddBFL{0.48 }& \DIFaddBFL{4.01 }& \DIFaddBFL{1.35 }& \DIFaddBFL{5.63 }\\
+\midrule \multicolumn{7}{l}{\emph{\DIFaddBFL{by real-word ratio }}\DIFaddBFL{$\rho$}} \\
+\DIFaddBFL{\quad 10\% }& \DIFaddBFL{1.14 }& \DIFaddBFL{5.21 }& \DIFaddBFL{0.32 }& \DIFaddBFL{3.87 }& \DIFaddBFL{0.94 }& \DIFaddBFL{5.33 }\\
+\DIFaddBFL{\quad 40\% }& \DIFaddBFL{1.32 }& \DIFaddBFL{5.29 }& \DIFaddBFL{0.39 }& \DIFaddBFL{4.03 }& \DIFaddBFL{1.10 }& \DIFaddBFL{5.27 }\\
+\DIFaddBFL{\quad 70\% }& \DIFaddBFL{1.42 }& \DIFaddBFL{5.12 }& \DIFaddBFL{0.47 }& \DIFaddBFL{3.99 }& \DIFaddBFL{1.31 }& \DIFaddBFL{5.45 }\\
+\midrule \multicolumn{7}{l}{\emph{\DIFaddBFL{by final answer}}} \\
+\DIFaddBFL{\quad correct }& \DIFaddBFL{0.87 }& \DIFaddBFL{4.69 }& \DIFaddBFL{0.27 }& \DIFaddBFL{3.75 }& \DIFaddBFL{0.88 }& \DIFaddBFL{4.94 }\\
+\DIFaddBFL{\quad wrong }& \DIFaddBFL{2.30 }& \DIFaddBFL{6.75 }& \DIFaddBFL{1.30 }& \DIFaddBFL{5.81 }& \DIFaddBFL{1.62 }& \DIFaddBFL{6.88 }\\
+\bottomrule
+\end{tabular}}
+\caption{\DIFaddBFL{Mean LLM-judge scores over answered traces. }\emph{\DIFaddBFL{repair}} \DIFaddBFL{is the repair
+score (0--5, higher means less of the intended meaning recovered); }\emph{\DIFaddBFL{doubt}}
+\DIFaddBFL{is the self-doubt score (0--10, higher means more hesitation and looping).}}
+\label{tab:judge}
+\end{table}
+
+\DIFaddend We measure self-doubt \DIFdelbegin \DIFdel{using }\DIFdelend \DIFaddbegin \DIFaddB{with }\DIFaddend two curated sets of expressions\DIFdelbegin \DIFdel{found in the
+reasoning traces}\DIFdelend . The uncertainty set
+\DIFdelbegin \DIFdel{includes hedging expressions }\DIFdelend \DIFaddbegin \DIFaddB{contains hedges }\DIFaddend such as \emph{maybe}, \emph{perhaps}, \emph{possibly},
+\emph{might be}, and \emph{not sure}\DIFdelbegin \DIFdel{. The }\DIFdelend \DIFaddbegin \DIFaddB{; the }\DIFaddend second-guessing set captures explicit
+reconsideration\DIFdelbegin \DIFdel{or
+self-correction, with expressions }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend such as \emph{wait}, \emph{actually}, \emph{reconsider},
+\emph{let me recheck}, and \emph{double-check}. \DIFdelbegin \DIFdel{To account
+for differences in trace length, we report the number of }\DIFdelend \DIFaddbegin \DIFaddB{We report }\DIFaddend matches per 1,000
+reasoning words.
+
+Uncertainty increases as the input becomes more corrupted. On GSM8K, \DIFdelbegin \DIFdel{for
+example, uncertainty }\DIFdelend \DIFaddbegin \DIFaddB{it }\DIFaddend rises
+from 7.4 markers per 1,000 words on clean input to 12.3 at a 25\% typo rate and
+18.7 at \DIFdelbegin \DIFdel{a }\DIFdelend 75\%\DIFdelbegin \DIFdel{typo rate, when }\DIFdelend \DIFaddbegin \DIFaddB{, with }\DIFaddend the real-word ratio \DIFdelbegin \DIFdel{is }\DIFdelend held at 10\%. The same \DIFdelbegin \DIFdel{increasing pattern appears on
+ARC and }\DIFdelend \DIFaddbegin \DIFaddB{trend holds on
+}\DIFaddend MATH-500 \DIFdelbegin \DIFdel{.
+Increasing the real-word ratio at }\DIFdelend \DIFaddbegin \DIFaddB{and ARC at the higher typo rates, although on ARC the mildest rate is
+not above clean. At }\DIFaddend a fixed typo rate\DIFdelbegin \DIFdel{leads to an additional rise
+in }\DIFdelend \DIFaddbegin \DIFaddB{, a higher real-word ratio tends to add
+further }\DIFaddend uncertainty (Figure~\ref{fig:doubt}; Table~\ref{tab:support}).
+
+Second-guessing \DIFdelbegin \DIFdel{shows a different pattern}\DIFdelend \DIFaddbegin \DIFaddB{behaves differently}\DIFaddend . Its density \DIFdelbegin \DIFdel{increases only slightly between clean and corrupted inputs and then remains relatively stable }\DIFdelend \DIFaddbegin \DIFaddG{rises only slightly on GSM8K,
+not at all on MATH-500 and ARC, and stays roughly flat }\DIFaddend across typo rates and
+real-word ratios. \DIFdelbegin \DIFdel{Although the total }\DIFdelend \DIFaddbegin \DIFaddB{The }\DIFaddend number of second-guessing expressions per trace \DIFdelbegin \DIFdel{increases,
+this is largely explained by the fact that
+}\DIFdelend \DIFaddbegin \DIFaddB{does grow,
+but mostly because }\DIFaddend corrupted inputs produce longer \DIFdelbegin \DIFdel{reasoning traces. In other words, typos }\DIFdelend \DIFaddbegin \DIFaddB{traces. Typos thus }\DIFaddend make the
+model express more uncertainty \DIFdelbegin \DIFdel{, but do not appear to make }\DIFdelend \DIFaddbegin \DIFaddB{without making }\DIFaddend it reconsider its reasoning more
+often\DIFdelbegin \DIFdel{(Figure~\ref{fig:doubt})}\DIFdelend .
+
+The \DIFdelbegin \DIFdel{difference becomes }\DIFdelend \DIFaddbegin \DIFaddB{contrast is }\DIFaddend clearer when we separate correct and incorrect answers. For the
+same \DIFdelbegin \DIFdel{typo rate and real-word ratio, uncertainty expressions are
+}\DIFdelend \DIFaddbegin \DIFaddB{configuration, uncertainty is }\DIFaddend consistently more frequent in traces that end
+with a wrong answer\DIFdelbegin \DIFdel{. On GSM8K,
+uncertainty density is about 1.4 }\DIFdelend \DIFaddbegin \DIFaddG{: 1.6 }\DIFaddend to 2.1 times \DIFdelbegin \DIFdel{higher in incorrect traces}\DIFdelend \DIFaddbegin \DIFaddB{on GSM8K}\DIFaddend , with similar patterns on ARC and
+MATH-500\DIFdelbegin \DIFdel{. Second-guessing shows a much weaker
+difference between correct and incorrect answers }\DIFdelend \DIFaddbegin \DIFaddB{, while second-guessing differs much less }\DIFaddend (Table~\ref{tab:support}).
+\DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Overall, uncertainty language is strongly associated with model failure, while
+explicit self-correction is not . The model expresses more doubt as the input
+becomes noisier and also tends to express more doubt when it is about to give a
+wrong answer. However, this relationship is not unique to typo-corrupted inputs}\DIFdelend \DIFaddbegin \DIFaddB{This relation is not unique to typos}\DIFaddend : even on clean GSM8K questions, incorrect
+answers \DIFdelbegin \DIFdel{already }\DIFdelend contain substantially more uncertainty language than correct ones.
+
+\DIFdelbegin \DIFdel{In the LLM-as-a-judge analysis, a separate language model examined each
+reasoning trace and assigned a }\DIFdelend \DIFaddbegin \DIFaddB{The judge's }\DIFaddend self-doubt \DIFdelbegin \DIFdel{score from 0 to 10. A score of 0 means
+that the model followed a clear, straight-line solution without hesitation,
+while 10 means that the trace contained pervasive uncertainty, repeated
+second-guessing, reversals, or looping. The judgewas shown the corrupted words,
+the question, and the model's reasoning trace (like in 5.3) .
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{On }\DIFdelend \DIFaddbegin \DIFaddB{score (Table~\ref{tab:judge}) rises with the typo rate on
+}\DIFaddend all three datasets, \DIFdelbegin \DIFdel{the average self-doubt score increases as the typo rate
+rises, indicating that more corrupted words cause more hesitation and re-evaluation. Typo traces also }\DIFdelend \DIFaddbegin \DIFaddB{and typo traces }\DIFaddend score higher than clean \DIFdelbegin \DIFdel{traces }\DIFdelend \DIFaddbegin \DIFaddB{ones }\DIFaddend everywhere. The
+real-word ratio, \DIFdelbegin \DIFdel{by contrast, has almost no effect: at a fixed typo rate the score moves by at most about 0.1 point in either direction. The amount of
+corruption changes how much the model hesitates, while }\DIFdelend \DIFaddbegin \DIFaddG{however, shows no consistent direction: pooled over typo rates,
+the score varies by less than 0.2 points on each dataset. The judge therefore
+confirms that more corruption brings more hesitation but, unlike the marker
+counts, does not register an additional effect of }\DIFaddend the kind of corruption\DIFdelbegin \DIFdel{does not (Table~\ref{tab:judge})}\DIFdelend .
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{figure*}[t]
+\DIFaddendFL \centering
+\DIFdelbeginFL %DIFDELCMD < \footnotesize
+%DIFDELCMD < \adjustbox{max width=\linewidth}{\begin{tabular}{l rr rr rr}
+%DIFDELCMD < \toprule
+%DIFDELCMD < & %%%
+%DIFDELCMD < \multicolumn{2}{c}{%
+{%DIFAUXCMD
+\textbf{\DIFdelFL{GSM8K}}%DIFAUXCMD
+} %DIFAUXCMD
+%DIFDELCMD < & %%%
+%DIFDELCMD < \multicolumn{2}{c}{%
+{%DIFAUXCMD
+\textbf{\DIFdelFL{MATH-500}}%DIFAUXCMD
+} %DIFAUXCMD
+%DIFDELCMD < & %%%
+%DIFDELCMD < \multicolumn{2}{c}{%
+{%DIFAUXCMD
+\textbf{\DIFdelFL{ARC-C}}%DIFAUXCMD
+} %DIFAUXCMD
+%DIFDELCMD < \\
+%DIFDELCMD < \cmidrule%%%
+\DIFdelFL{(lr)}%DIFDELCMD < {%%%
+\DIFdelFL{2-3}%DIFDELCMD < }\cmidrule%%%
+\DIFdelFL{(lr)}%DIFDELCMD < {%%%
+\DIFdelFL{4-5}%DIFDELCMD < }\cmidrule%%%
+\DIFdelFL{(lr)}%DIFDELCMD < {%%%
+\DIFdelFL{6-7}%DIFDELCMD < }
+%DIFDELCMD < %%%
+\textbf{\DIFdelFL{condition}} %DIFAUXCMD
+%DIFDELCMD < & %%%
+\DIFdelFL{repair }%DIFDELCMD < & %%%
+\DIFdelFL{doubt }%DIFDELCMD < & %%%
+\DIFdelFL{repair }%DIFDELCMD < & %%%
+\DIFdelFL{doubt }%DIFDELCMD < & %%%
+\DIFdelFL{repair }%DIFDELCMD < & %%%
+\DIFdelFL{doubt }%DIFDELCMD < \\
+%DIFDELCMD < \midrule
+%DIFDELCMD < %%%
+%DIFDELCMD < \multicolumn{7}{l}{%
+{%DIFAUXCMD
+\emph{\DIFdelFL{clean}}%DIFAUXCMD
+} %DIFAUXCMD
+%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad --- }%DIFDELCMD < & %%%
+\DIFdelFL{0.13 }%DIFDELCMD < & %%%
+\DIFdelFL{4.50 }%DIFDELCMD < & %%%
+\DIFdelFL{0.03 }%DIFDELCMD < & %%%
+\DIFdelFL{3.66 }%DIFDELCMD < & %%%
+\DIFdelFL{0.03 }%DIFDELCMD < & %%%
+\DIFdelFL{4.69 }%DIFDELCMD < \\
+%DIFDELCMD < \midrule %%%
+%DIFDELCMD < \multicolumn{7}{l}{%
+{%DIFAUXCMD
+\emph{\DIFdelFL{by typo rate }}%DIFAUXCMD
+\DIFdelFL{$r$}} %DIFAUXCMD
+%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 25\% }%DIFDELCMD < & %%%
+\DIFdelFL{0.88 }%DIFDELCMD < & %%%
+\DIFdelFL{4.86 }%DIFDELCMD < & %%%
+\DIFdelFL{0.35 }%DIFDELCMD < & %%%
+\DIFdelFL{3.90 }%DIFDELCMD < & %%%
+\DIFdelFL{0.97 }%DIFDELCMD < & %%%
+\DIFdelFL{5.12 }%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 50\% }%DIFDELCMD < & %%%
+\DIFdelFL{1.27 }%DIFDELCMD < & %%%
+\DIFdelFL{5.12 }%DIFDELCMD < & %%%
+\DIFdelFL{0.35 }%DIFDELCMD < & %%%
+\DIFdelFL{3.98 }%DIFDELCMD < & %%%
+\DIFdelFL{1.03 }%DIFDELCMD < & %%%
+\DIFdelFL{5.31 }%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 75\% }%DIFDELCMD < & %%%
+\DIFdelFL{1.74 }%DIFDELCMD < & %%%
+\DIFdelFL{5.64 }%DIFDELCMD < & %%%
+\DIFdelFL{0.48 }%DIFDELCMD < & %%%
+\DIFdelFL{4.01 }%DIFDELCMD < & %%%
+\DIFdelFL{1.35 }%DIFDELCMD < & %%%
+\DIFdelFL{5.63 }%DIFDELCMD < \\
+%DIFDELCMD < \midrule %%%
+%DIFDELCMD < \multicolumn{7}{l}{%
+{%DIFAUXCMD
+\emph{\DIFdelFL{by real-word ratio }}%DIFAUXCMD
+\DIFdelFL{$\rho$}} %DIFAUXCMD
+%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 10\% }%DIFDELCMD < & %%%
+\DIFdelFL{1.14 }%DIFDELCMD < & %%%
+\DIFdelFL{5.21 }%DIFDELCMD < & %%%
+\DIFdelFL{0.32 }%DIFDELCMD < & %%%
+\DIFdelFL{3.87 }%DIFDELCMD < & %%%
+\DIFdelFL{0.94 }%DIFDELCMD < & %%%
+\DIFdelFL{5.33 }%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 40\% }%DIFDELCMD < & %%%
+\DIFdelFL{1.32 }%DIFDELCMD < & %%%
+\DIFdelFL{5.29 }%DIFDELCMD < & %%%
+\DIFdelFL{0.39 }%DIFDELCMD < & %%%
+\DIFdelFL{4.03 }%DIFDELCMD < & %%%
+\DIFdelFL{1.10 }%DIFDELCMD < & %%%
+\DIFdelFL{5.27 }%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad 70\% }%DIFDELCMD < & %%%
+\DIFdelFL{1.42 }%DIFDELCMD < & %%%
+\DIFdelFL{5.12 }%DIFDELCMD < & %%%
+\DIFdelFL{0.47 }%DIFDELCMD < & %%%
+\DIFdelFL{3.99 }%DIFDELCMD < & %%%
+\DIFdelFL{1.31 }%DIFDELCMD < & %%%
+\DIFdelFL{5.45 }%DIFDELCMD < \\
+%DIFDELCMD < \midrule %%%
+%DIFDELCMD < \multicolumn{7}{l}{%
+{%DIFAUXCMD
+\emph{\DIFdelFL{by final answer}}%DIFAUXCMD
+} %DIFAUXCMD
+%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad correct }%DIFDELCMD < & %%%
+\DIFdelFL{0.87 }%DIFDELCMD < & %%%
+\DIFdelFL{4.69 }%DIFDELCMD < & %%%
+\DIFdelFL{0.27 }%DIFDELCMD < & %%%
+\DIFdelFL{3.75 }%DIFDELCMD < & %%%
+\DIFdelFL{0.88 }%DIFDELCMD < & %%%
+\DIFdelFL{4.94 }%DIFDELCMD < \\
+%DIFDELCMD < %%%
+\DIFdelFL{\quad wrong }%DIFDELCMD < & %%%
+\DIFdelFL{2.30 }%DIFDELCMD < & %%%
+\DIFdelFL{6.75 }%DIFDELCMD < & %%%
+\DIFdelFL{1.30 }%DIFDELCMD < & %%%
+\DIFdelFL{5.81 }%DIFDELCMD < & %%%
+\DIFdelFL{1.62 }%DIFDELCMD < & %%%
+\DIFdelFL{6.88 }%DIFDELCMD < \\
+%DIFDELCMD < \bottomrule
+%DIFDELCMD < \end{tabular}}
+%DIFDELCMD < %%%
+%DIFDELCMD < \caption{%
+{%DIFAUXCMD
+\DIFdelFL{Mean LLM-judge scores. }\emph{\DIFdelFL{repair}} %DIFAUXCMD
+\DIFdelFL{is the repair-understanding score
+(0--5, higher means less of the intended meaning recovered); }\emph{\DIFdelFL{doubt}} %DIFAUXCMD
+\DIFdelFL{is the
+self-doubt score (0--10, higher means more hesitation and looping).
+All three datasets were judged on the same main
+generations reported everywhere else in this paper.}}
+%DIFAUXCMD
+%DIFDELCMD < \label{tab:judge}
+%DIFDELCMD < \end{table}
+%DIFDELCMD < 
+
+%DIFDELCMD < \begin{figure*}[tbp]
+%DIFDELCMD < \centering
+%DIFDELCMD < %%%
+\DIFdelendFL \includegraphics[width=\textwidth]{figures/fig_doubt.pdf}
+\caption{\textbf{Self-doubt under typos.} Marker density per 1{,}000
+reasoning words across the grid. Uncertainty markers (solid) \DIFdelbeginFL \DIFdelFL{climb steadily
+}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{rise }\DIFaddendFL with
+corruption on all three datasets, \DIFaddbeginFL \DIFaddBFL{most steeply on GSM8K, }\DIFaddendFL while second-guessing
+markers (dashed) stay \DIFaddbeginFL \DIFaddBFL{roughly }\DIFaddendFL flat\DIFdelbeginFL \DIFdelFL{, so }\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{: }\DIFaddendFL typos make the model express more doubt
+without making it verify more. The same densities split by final answer are in
+Table~\ref{tab:support}.}
+\label{fig:doubt}
+\end{figure*}
+
+\subsection{\DIFdelbegin \DIFdel{Every }\DIFdelend \DIFaddbegin \DIFaddB{No }\DIFaddend lightweight mitigation \DIFdelbegin \DIFdel{fails}\DIFdelend \DIFaddbegin \DIFaddB{reliably helps}\DIFaddend }
+\DIFaddbegin \label{sec:fixes}
+\DIFaddend 
+
+We tested the three mitigation strategies \DIFdelbegin \DIFdel{proposed in our plan , all }\DIFdelend \DIFaddbegin \DIFaddB{from our plan }\DIFaddend on GSM8K
+(\DIFdelbegin \DIFdel{Figure~\ref{fig:fixes}, }\DIFdelend Table~\ref{tab:fixes}).
+
+\paragraph{Warn.}
+\DIFdelbegin \DIFdel{We first added a short warning that the input }\DIFdelend \DIFaddbegin \DIFaddB{Prefixing the prompt with ``Note: the text }\DIFaddend may contain typos.\DIFdelbegin \DIFdel{Across the nine
+typo configurations, this }\DIFdelend \DIFaddbegin \DIFaddB{'' }\DIFaddend changed
+accuracy by only $-0.5$ percentage points on average \DIFaddbegin \DIFaddB{across the nine typo
+configurations}\DIFaddend , with effects ranging from $-4.3$ to $+3.5$ points. \DIFdelbegin \DIFdel{In other words,
+simply warning the model does not improve performance. }\DIFdelend This is
+consistent with \DIFdelbegin \DIFdel{the analysis in Section~5.3}\DIFdelend \DIFaddbegin \DIFaddB{\S\ref{sec:repair}}\DIFaddend , where the model often already showed signs
+of noticing that the input was corrupted\DIFdelbegin \DIFdel{. The main limitation therefore }\DIFdelend \DIFaddbegin \DIFaddB{: the limitation }\DIFaddend does not appear to be
+awareness of the typo itself.
+
+\paragraph{Rewrite.}
+\DIFdelbegin \DIFdel{We next instructed }\DIFdelend \DIFaddbegin \DIFaddB{Instructing }\DIFaddend the model to first rewrite the question with the typos corrected
+and only then solve it \DIFdelbegin \DIFdel{. This }\DIFdelend performed worse than the original \DIFdelbegin \DIFdel{setup
+}\DIFdelend \DIFaddbegin \DIFaddB{prompt }\DIFaddend in all nine
+configurations, reducing accuracy by 4.7 percentage points on average and by \DIFdelbegin \DIFdel{as much as }\DIFdelend \DIFaddbegin \DIFaddB{up
+to }\DIFaddend 7.5 points. Median reasoning length also \DIFdelbegin \DIFdel{dropped from }\DIFdelend \DIFaddbegin \DIFaddB{fell, from about }\DIFaddend 1,\DIFdelbegin \DIFdel{214 to about 730 tokens }\DIFdelend \DIFaddbegin \DIFaddG{300 to about 740
+tokens (median over the nine typo configurations)}\DIFaddend . One possible explanation is
+that the rewrite step forces the model to commit to a single interpretation of
+the corrupted question too early\DIFdelbegin \DIFdel{. If }\DIFdelend \DIFaddbegin \DIFaddB{; if }\DIFaddend the reconstruction is wrong, the model
+\DIFdelbegin \DIFdel{then }\DIFdelend reasons about the wrong \DIFdelbegin \DIFdel{version of the }\DIFdelend problem with little opportunity to recover.
+\DIFdelbegin \DIFdel{The additional
+rewrite step may also shift part of the generation budget away from the
+reasoning process itself.
+}\DIFdelend 
+
+\paragraph{Spell check.}
+We applied an external \DIFdelbegin \DIFdel{spellchecker }\DIFdelend \DIFaddbegin \DIFaddB{spell checker (}\texttt{\DIFaddB{pyspellchecker}}\DIFaddB{, edit distance 2,
+prose words only) }\DIFaddend to the same \DIFdelbegin \DIFdel{500 GSM8K }\DIFdelend questions before sending them to the model. A
+typo \DIFdelbegin \DIFdel{was considered }\DIFdelend \DIFaddbegin \DIFaddB{counts as }\DIFaddend recovered only if it \DIFdelbegin \DIFdel{was
+}\DIFdelend \DIFaddbegin \DIFaddB{is }\DIFaddend restored exactly to the original word.
+Recovery dropped as the share of real-word typos increased: from 54.9\% at
+$\rho{=}10$ to 39.9\% at $\rho{=}40$ and 25.8\% at $\rho{=}70$. \DIFdelbegin \DIFdel{However, this }\DIFdelend \DIFaddbegin \DIFaddB{This }\DIFaddend lexical
+recovery did not translate into a consistent accuracy gain\DIFdelbegin \DIFdel{. Across the nine typo
+configurations, the spellchecker }\DIFdelend \DIFaddbegin \DIFaddB{: the spell checker
+}\DIFaddend changed accuracy by \DIFdelbegin \DIFdel{only }\DIFdelend $-0.1$ percentage points on average, improving five
+conditions and hurting four\DIFdelbegin \DIFdel{; accuracy }\DIFdelend \DIFaddbegin \DIFaddG{, with 62.2\% }\DIFaddend in the hardest condition\DIFdelbegin \DIFdel{was 62.2\% (Table~\ref{tab:fixes}). }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{This is likely because spellcheckers are much better at detecting }\DIFdelend \DIFaddbegin \DIFaddB{. Spell
+checkers detect }\DIFaddend non-word errors \DIFaddbegin \DIFaddB{far better }\DIFaddend than real-word substitutions, \DIFdelbegin \DIFdel{which already look like valid words. In
+some cases, they }\DIFdelend \DIFaddbegin \DIFaddB{and
+}\DIFaddend may even replace a non-word typo with \DIFdelbegin \DIFdel{the }\DIFdelend \DIFaddbegin \DIFaddB{a }\DIFaddend wrong valid word, \DIFdelbegin \DIFdel{effectively creating the type }\DIFdelend \DIFaddbegin \DIFaddB{creating the kind }\DIFaddend of
+error that \DIFdelbegin \DIFdel{Section~5.2 }\DIFdelend \DIFaddbegin \DIFaddB{\S\ref{sec:realword} }\DIFaddend found to be more harmful.
+
+\DIFdelbegin \DIFdel{Taken together, these results suggest that the main difficulty is not simply
+detecting that the input contains errors. None of the three strategies reliably
+recovers the information that was lost during corruption: the identity of the
+original word. Warnings provide little additional information, an explicit
+rewrite step can commit the model to an incorrect reconstruction, and
+dictionary-based correction is least effective precisely when the corruption
+results in another valid word.
+}%DIFDELCMD < 
+
+%DIFDELCMD < \begin{figure*}[tbp]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \begin{table}[t]
+\DIFaddendFL \centering
+\DIFdelbeginFL %DIFDELCMD < \includegraphics[width=\textwidth]{figures/fig_fixes.pdf}
+%DIFDELCMD < %%%
+%DIFDELCMD < \caption{%
+{%DIFAUXCMD
+\textbf{\DIFdelFL{Prompt-level mitigations on GSM8K.}} %DIFAUXCMD
+\emph{\DIFdelFL{(a)}} %DIFAUXCMD
+\DIFdelFL{answered-only
+accuracy for the unmodified prompt, the typo warning and the rewrite-first
+instruction. }\emph{\DIFdelFL{(b)}} %DIFAUXCMD
+\DIFdelFL{each fix as a change from the unmodified prompt. Warning
+the model is null on average and the rewrite instruction is consistently
+harmful.}}
+%DIFAUXCMD
+%DIFDELCMD < \label{fig:fixes}
+%DIFDELCMD < \end{figure*}
+%DIFDELCMD < 
+
+%DIFDELCMD < \begin{table}[tbp]
+%DIFDELCMD < \centering
+%DIFDELCMD < %%%
+\DIFdelendFL \footnotesize
+\DIFaddbeginFL \setlength{\tabcolsep}{4pt}
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{lr rr rr rr}
+\toprule
+& \textbf{no fix} & \multicolumn{2}{c}{\textbf{warn}} & \multicolumn{2}{c}{\textbf{rewrite}} & \multicolumn{2}{c}{\textbf{spell check}} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+\textbf{$r$/$\rho$} & acc & acc & $\Delta$ & acc & $\Delta$ & acc & $\Delta$ \\
+\midrule
+25/10 & 85.5 & 85.7 & +0.2 & 83.8 & -1.7 & 87.0 & +1.5 \\
+25/40 & 87.0 & 87.2 & +0.2 & 82.9 & -4.1 & 86.1 & -0.9 \\
+25/70 & 86.7 & 85.5 & -1.2 & 80.2 & -6.6 & 85.3 & -1.4 \\
+50/10 & 79.6 & 79.4 & -0.2 & 76.3 & -3.3 & 79.0 & -0.6 \\
+50/40 & 79.0 & 74.7 & -4.3 & 71.5 & -7.5 & 75.0 & -4.0 \\
+50/70 & 72.8 & 74.0 & +1.2 & 67.9 & -4.9 & 73.2 & +0.4 \\
+75/10 & 73.8 & 70.6 & -3.2 & 66.9 & -6.9 & 75.3 & +1.5 \\
+75/40 & 67.3 & 66.3 & -0.9 & 63.8 & -3.5 & 68.1 & +0.9 \\
+75/70 & 60.4 & 63.9 & +3.5 & 56.9 & -3.5 & 62.2 & +1.8 \\
+\midrule \textbf{mean} & & & \textbf{-0.5} & & \textbf{-4.7} & & \textbf{-0.1} \\
+\bottomrule
+\end{tabular}}
+\caption{GSM8K \DIFaddbeginFL \DIFaddBFL{answered-only }\DIFaddendFL accuracy (\%) under each \DIFdelbeginFL \DIFdelFL{prompt-level }\DIFdelendFL mitigation, per
+configuration, with the change against the unmodified prompt \DIFaddbeginFL \DIFaddBFL{(}\emph{\DIFaddBFL{no fix}}\DIFaddBFL{)}\DIFaddendFL .
+The mean row is taken over the nine typo configurations.}
+\label{tab:fixes}
+\end{table}
+
+% =====================================================================
+\section{Discussion}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+The most consistent finding across our analyses is that real-word typos are more
+harmful than non-word typos\DIFdelbegin \DIFdel{. This pattern appears }\DIFdelend \DIFaddbegin \DIFaddB{, }\DIFaddend in the per-typo regression, the paired comparisons,
+and the \DIFdelbegin \DIFdel{spellchecker results. At first, this may seem
+surprising, }\DIFdelend \DIFaddbegin \DIFaddB{spell-checker results. One might expect the opposite, }\DIFaddend since non-word
+typos \DIFdelbegin \DIFdel{often produce unusual tokenizationpatterns and
+might therefore be expected to be more disruptive}\DIFdelend \DIFaddbegin \DIFaddB{disrupt tokenization}\DIFaddend . Our results suggest \DIFdelbegin \DIFdel{the
+opposite. A }\DIFdelend \DIFaddbegin \DIFaddB{that a }\DIFaddend non-word typo is visibly
+unusual and \DIFdelbegin \DIFdel{can serve as a signal }\DIFdelend \DIFaddbegin \DIFaddB{signals }\DIFaddend that something is wrong, \DIFdelbegin \DIFdel{while }\DIFdelend \DIFaddbegin \DIFaddB{whereas }\DIFaddend a real-word typo is fluent,
+tokenized normally, and may fit the sentence well enough \DIFdelbegin \DIFdel{to go unnoticed even when its meaning is
+incorrect. }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{This also helps explain the limited success of }\DIFdelend \DIFaddbegin \DIFaddB{that its wrong meaning
+is taken at face value. The same property makes it hard for }\DIFaddend dictionary-based
+correction\DIFdelbegin \DIFdel{. Such
+methods are effective mainly when the corrupted form is not a valid word.
+Real-word substitutions, however, are already present in the dictionary and are
+therefore much harder to detect. In our spellchecker experiment, recovery
+dropped substantially as the proportion of real-word typos increased. In some
+cases, the spellchecker also replaced a non-word typo with an incorrect valid
+word, effectively turning a visible error into the type of corruption we found
+to be more damaging.
+}\DIFdelend \DIFaddbegin \DIFaddB{, which can only act on forms that are not valid words.
+}\DIFaddend 
+
+The trace analysis points to a related conclusion. The model often \DIFdelbegin \DIFdel{appears to
+notice }\DIFdelend \DIFaddbegin \DIFaddB{notices }\DIFaddend that
+the input is unusual: uncertainty language increases, \DIFdelbegin \DIFdel{suspicious
+}\DIFdelend \DIFaddbegin \DIFaddB{corrupted }\DIFaddend words are
+flagged more often, and \DIFdelbegin \DIFdel{reasoning }\DIFdelend traces become longer\DIFdelbegin \DIFdel{as corruption
+increases. However, this }\DIFdelend \DIFaddbegin \DIFaddB{. This }\DIFaddend additional effort does not
+reliably lead to recovery\DIFdelbegin \DIFdel{.
+The model expresses more uncertainty, but does not appear to verify its
+interpretation more effectively.
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{This helps explain why the simple mitigation strategies we tested }\DIFdelend \DIFaddbegin \DIFaddB{, which also explains why the mitigations }\DIFaddend had little
+effect\DIFdelbegin \DIFdel{. Warning the model adds information it }\DIFdelend \DIFaddbegin \DIFaddB{: a warning adds information the model }\DIFaddend often already has, while \DIFdelbegin \DIFdel{forcing
+it to rewrite the question can make it commit too }\DIFdelend \DIFaddbegin \DIFaddB{a forced
+rewrite commits it }\DIFaddend early to a single\DIFdelbegin \DIFdel{interpretation. If that reconstruction is wrong, the subsequent reasoning is
+based on the wrongversion of the problem.
+}%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Taken together, these results suggest that the }\DIFdelend \DIFaddbegin \DIFaddB{, possibly wrong, interpretation. The }\DIFaddend main
+difficulty is \DIFaddbegin \DIFaddB{therefore }\DIFaddend not detecting that a typo exists, but recovering the
+intended word when the corruption is ambiguous. A more promising direction may
+\DIFdelbegin \DIFdel{therefore be to preserve multiple possible interpretations }\DIFdelend \DIFaddbegin \DIFaddB{be to keep multiple interpretations open }\DIFaddend during reasoning and resolve \DIFdelbegin \DIFdel{the ambiguity }\DIFdelend \DIFaddbegin \DIFaddB{them
+}\DIFaddend later using the structure of the problem\DIFdelbegin \DIFdel{, rather than forcing an early correction. }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFaddB{. }\DIFaddend Finally, longer \DIFdelbegin \DIFdel{reasoning }\DIFdelend traces should not be
+\DIFdelbegin \DIFdel{interpreted }\DIFdelend \DIFaddbegin \DIFaddB{read }\DIFaddend as evidence of successful self-correction\DIFdelbegin \DIFdel{. In our results, incorrect answers tend to }\DIFdelend \DIFaddbegin \DIFaddB{: incorrect answers }\DIFaddend produce
+longer traces even on clean input.
+\DIFdelbegin \DIFdel{This suggests that additional reasoning often
+reflects difficulty rather than successful recovery.
+}\DIFdelend 
+
+% =====================================================================
+\section{Limitations}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+\DIFdelbegin \paragraph{\DIFdel{One model, one sample.}}
+%DIFAUXCMD
+\addtocounter{paragraph}{-1}%DIFAUXCMD
+\DIFdelend \DIFaddbegin \textbf{\DIFaddB{One model, one sample.}}
+\DIFaddend All headline results come from a single 7B reasoning model at one decoding
+setting with $n{=}1$ sample per question. Our plan called for several samples per
+question, but the API budget did not permit it, so we cannot separate typo
+effects from decoding variance at the level of an individual question. \DIFdelbegin \DIFdel{Still,
+the }\DIFdelend \DIFaddbegin \DIFaddB{The
+}\DIFaddend overall effects are much larger than expected sampling noise (McNemar
+$p < 10^{-6}$ on $n{=}480$ paired items), but \DIFdelbegin \DIFdel{generalisation }\DIFdelend \DIFaddbegin \DIFaddB{generalization }\DIFaddend to larger reasoning
+models is untested.
+
+\DIFdelbegin \paragraph{\DIFdel{Dataset substitution.}}
+%DIFAUXCMD
+\addtocounter{paragraph}{-1}%DIFAUXCMD
+\DIFdelend \DIFaddbegin \textbf{\DIFaddB{Dataset substitution.}}
+\DIFaddend We originally planned to use GPQA-Diamond, but replaced it with ARC-Challenge,
+which is also a multiple-choice science dataset. On clean GPQA-Diamond, the
+model reached only about 52\% accuracy. Since random guessing gives 25\%, this
+leaves limited room to measure further drops under corruption: as performance
+gets closer to chance, changes in accuracy become harder to interpret as
+reasoning failures rather than guessing. ARC-Challenge is easier and its answer
+options may help the model recover some information, so our multiple-choice
+results may underestimate the effect of typos on harder science questions.
+
+\DIFdelbegin \paragraph{\DIFdel{Mitigations and human validation.}}
+%DIFAUXCMD
+\addtocounter{paragraph}{-1}%DIFAUXCMD
+\DIFdelend \DIFaddbegin \textbf{\DIFaddB{Scope of the mitigation study.}}
+\DIFaddend We tested the three mitigation methods only on GSM8K because the experiments
+required additional paid API calls and our budget was limited. We chose \DIFdelbegin \DIFdel{to focus
+on }\DIFdelend GSM8K
+because it showed the clearest drop in answer quality under typo corruption,
+making it the most informative dataset for evaluating whether these mitigation
+strategies could recover performance.
+
+% =====================================================================
+\section{AI Disclosure and Reflection}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+\paragraph{What we used AI for.}
+We used GitHub Copilot with Claude primarily to support coding tasks during the
+project. It helped us build the typo-generation and inference pipelines, write
+analysis scripts, generate matplotlib code for figures, and improve the wording
+of some parts of the paper. All methodological and experimental decisions,
+including the two-axis corruption grid, typo-type weights, answer-extraction
+rules, and judge rubric, were made by us. The analysis scripts were written with
+Claude's assistance based on these decisions, and all reported results were
+generated from the raw generation logs using those scripts.
+
+\paragraph{Reflection.}
+AI tools were especially useful for speeding up repetitive coding and analysis
+tasks and for keeping the implementation consistent across experiments. However,
+generated code and outputs still required careful checking, particularly for
+numerical results. We therefore verified reported results against the raw data
+and used a consistent scoring procedure throughout the analysis. Overall, the
+project highlighted the importance of reproducibility and independent
+verification when AI tools are used in research.
+
+% =====================================================================
+\section{Conclusion}
+%DIF <  AUTHOR TEXT - verbatim.
+% =====================================================================
+
+Typos have a clear and consistent effect on reasoning performance. On GSM8K,
+accuracy dropped by as much as 31 percentage points, with larger declines as the
+corruption rate increased\DIFdelbegin \DIFdel{. The }\DIFdelend \DIFaddbegin \DIFaddB{, and the }\DIFaddend strongest effect came from typos that turned
+one valid English word into another. \DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Our analysis suggests that the }\DIFdelend \DIFaddbegin \DIFaddB{The }\DIFaddend main problem is not that the model
+fails to notice corrupted input\DIFdelbegin \DIFdel{. In many cases, it appears to recognize }\DIFdelend \DIFaddbegin \DIFaddB{: it often recognizes }\DIFaddend that something is wrong,
+but \DIFdelbegin \DIFdel{it still }\DIFdelend cannot reliably recover the intended meaning. \DIFdelbegin \DIFdel{The reasoning
+}\DIFdelend \DIFaddbegin \DIFaddB{Its }\DIFaddend traces show more
+uncertainty \DIFdelbegin \DIFdel{than actual }\DIFdelend \DIFaddbegin \DIFaddB{rather than more }\DIFaddend verification, and \DIFdelbegin \DIFdel{the mitigation
+methods we tested, including prompting strategies and }\DIFdelend \DIFaddbegin \DIFaddB{neither prompting strategies nor
+}\DIFaddend dictionary-based correction \DIFdelbegin \DIFdel{, did not consistently improve performance. }%DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdel{Overall, these results suggest that robustness }\DIFdelend \DIFaddbegin \DIFaddB{consistently improved performance. Robustness }\DIFaddend to
+everyday typing errors should \DIFaddbegin \DIFaddB{therefore }\DIFaddend be treated as a \DIFdelbegin \DIFdel{separate capability that needs }\DIFdelend \DIFaddbegin \DIFaddB{capability }\DIFaddend to be
+developed explicitly, rather than \DIFdelbegin \DIFdel{something that can be }\DIFdelend assumed from strong benchmark performance.
+
+All code is available in the project repository, and the raw generation logs are
+hosted on the Hugging Face Hub (\texttt{ronshtricker/typo-reasoning-results}).
+All reported results can be reproduced by running \texttt{download\_data.py}
+followed by \texttt{run\_all.py}.
+
+%DIF <  =====================================================================
+\DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < %%%
+\DIFdelend \begin{thebibliography}{17}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Belinkov and Bisk(2018)}]{belinkov2018}
+Yonatan Belinkov and Yonatan Bisk. 2018.
+\newblock Synthetic and natural noise both break neural machine translation.
+\newblock In \emph{International Conference on Learning Representations}.
+
+\bibitem[{Chai et~al.(2024)Chai, Fang, Peng, and Li}]{chai2024}
+Yekun Chai, Yewei Fang, Qiwei Peng, and Xuhong Li. 2024.
+\newblock Tokenization falling short: On subword robustness in large language
+  models.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2024}.
+
+\bibitem[{Clark et~al.(2018)Clark, Cowhey, Etzioni, Khot, Sabharwal, Schoenick,
+  and Tafjord}]{clark2018}
+Peter Clark, Isaac Cowhey, Oren Etzioni, Tushar Khot, Ashish Sabharwal, Carissa
+  Schoenick, and Oyvind Tafjord. 2018.
+\newblock Think you have solved question answering? try {ARC}, the {AI2}
+  reasoning challenge.
+\newblock \emph{arXiv preprint arXiv:1803.05457}.
+
+\bibitem[{Cobbe et~al.(2021)Cobbe, Kosaraju, Bavarian, Chen, Jun, Kaiser
+  et~al.}]{cobbe2021}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz
+  Kaiser, et~al. 2021.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv preprint arXiv:2110.14168}.
+
+\bibitem[{Ebrahimi et~al.(2018)Ebrahimi, Rao, Lowd, and Dou}]{ebrahimi2018}
+Javid Ebrahimi, Anyi Rao, Daniel Lowd, and Dejing Dou. 2018.
+\newblock {HotFlip}: White-box adversarial examples for text classification.
+\newblock In \emph{Proceedings of the 56th Annual Meeting of the Association
+  for Computational Linguistics}.
+
+\bibitem[{Gan et~al.(2024)Gan, Zhao, Cheng, Mao, Goyal, Kawaguchi, Kan, and
+  Shieh}]{gan2024}
+Esther Gan, Yiran Zhao, Liying Cheng, Yancan Mao, Anirudh Goyal, Kenji
+  Kawaguchi, Min-Yen Kan, and Michael Shieh. 2024.
+\newblock Reasoning robustness of {LLM}s to adversarial typographical errors.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in
+  Natural Language Processing}.
+
+\bibitem[{Grattafiori et~al.(2024)Grattafiori, Dubey, Jauhri, Pandey
+  et~al.}]{llama3}
+Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, et~al.
+  2024.
+\newblock The {Llama} 3 herd of models.
+\newblock \emph{arXiv preprint arXiv:2407.21783}.
+
+\bibitem[{Guo et~al.(2025)Guo, Yang, Zhang, Song, Zhang, Xu
+  et~al.}]{deepseekr1}
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu,
+  et~al. 2025.
+\newblock {DeepSeek-R1}: Incentivizing reasoning capability in {LLM}s via
+  reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:2501.12948}.
+
+\bibitem[{Hendrycks et~al.(2021)Hendrycks, Burns, Kadavath, Arora, Basart,
+  Tang, Song, and Steinhardt}]{hendrycks2021}
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric
+  Tang, Dawn Song, and Jacob Steinhardt. 2021.
+\newblock Measuring mathematical problem solving with the {MATH} dataset.
+\newblock In \emph{Proceedings of the Neural Information Processing Systems
+  Track on Datasets and Benchmarks}.
+
+\bibitem[{Huang et~al.(2024)Huang, Chen, Mishra, Zheng, Yu, Song, and
+  Zhou}]{huang2024}
+Jie Huang, Xinyun Chen, Swaroop Mishra, Huaixiu~Steven Zheng, Adams~Wei Yu,
+  Xinying Song, and Denny Zhou. 2024.
+\newblock Large language models cannot self-correct reasoning yet.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[{Jin et~al.(2020)Jin, Jin, Zhou, and Szolovits}]{jin2020}
+Di~Jin, Zhijing Jin, Joey~Tianyi Zhou, and Peter Szolovits. 2020.
+\newblock Is {BERT} really robust? a strong baseline for natural language
+  attack on text classification and entailment.
+\newblock In \emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}.
+
+\bibitem[{Lightman et~al.(2024)Lightman, Kosaraju, Burda, Edwards, Baker, Lee,
+  Leike, Schulman, Sutskever, and Cobbe}]{lightman2024}
+Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy
+  Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. 2024.
+\newblock Let's verify step by step.
+\newblock In \emph{The Twelfth International Conference on Learning
+  Representations}.
+
+\bibitem[{Pruthi et~al.(2019)Pruthi, Dhingra, and Lipton}]{pruthi2019}
+Danish Pruthi, Bhuwan Dhingra, and Zachary~C. Lipton. 2019.
+\newblock Combating adversarial misspellings with robust word recognition.
+\newblock In \emph{Proceedings of the 57th Annual Meeting of the Association
+  for Computational Linguistics}.
+
+\bibitem[{Turpin et~al.(2023)Turpin, Michael, Perez, and Bowman}]{turpin2023}
+Miles Turpin, Julian Michael, Ethan Perez, and Samuel~R. Bowman. 2023.
+\newblock Language models don't always say what they think: Unfaithful
+  explanations in chain-of-thought prompting.
+\newblock In \emph{Advances in Neural Information Processing Systems}.
+
+\bibitem[{Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le,
+  and Zhou}]{wei2022}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia,
+  Ed~Chi, Quoc Le, and Denny Zhou. 2022.
+\newblock Chain-of-thought prompting elicits reasoning in large language
+  models.
+\newblock In \emph{Advances in Neural Information Processing Systems}.
+
+\bibitem[{Zhao et~al.(2026)Zhao, Liu, Altinger, Sch{\"u}tze, and
+  Hedderich}]{zhao2026}
+Raoyuan Zhao, Yihong Liu, Lena Altinger, Hinrich Sch{\"u}tze, and Michael~A.
+  Hedderich. 2026.
+\newblock Evaluating robustness of large language models against multilingual
+  typographical errors.
+\newblock In \emph{Proceedings of the 64th Annual Meeting of the Association
+  for Computational Linguistics (Volume 1: Long Papers)}, pages 16059--16078,
+  San Diego, California, United States.
+
+\bibitem[{Zhu et~al.(2024)Zhu, Wang, Zhou, Wang, Chen, Wang, Yang, Ye, Zhang,
+  Gong, and Xie}]{zhu2024}
+Kaijie Zhu, Jindong Wang, Jiaheng Zhou, Zichen Wang, Hao Chen, Yidong Wang,
+  Linyi Yang, Wei Ye, Yue Zhang, Neil Gong, and Xing Xie. 2024.
+\newblock {PromptBench}: Towards evaluating the robustness of large language
+  models on adversarial prompts.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics}.
+
+\end{thebibliography}
+
+
+%DIF <  =====================================================================
+\DIFdelbegin %DIFDELCMD < \appendix
+%DIFDELCMD < %%%
+\DIFdelend \clearpage
+\onecolumn
+\DIFdelbegin %DIFDELCMD < \raggedbottom
+%DIFDELCMD < %%%
+\section*{\DIFdel{Appendix}}
+%DIFAUXCMD
+%DIFDELCMD < \vspace{0.5em}
+%DIFDELCMD < \renewcommand{\thetable}{A\arabic{table}}
+%DIFDELCMD < \setcounter{table}{0}
+%DIFDELCMD < \setlength{\tabcolsep}{2.6pt}
+%DIFDELCMD < %%%
+\DIFdelend %DIF > -------------------------------------------------------------------------------
+\DIFaddbegin \appendix
+\DIFaddend 
+
+%DIF <  =====================================================================
+\DIFdelbegin %DIFDELCMD < 
+
+%DIFDELCMD < \begin{table}[H]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \section{\DIFaddBFL{Full accuracy grid}}
+\label{app:grid}
+\begin{table}[!ht]
+\DIFaddendFL \centering\scriptsize\DIFaddbeginFL \setlength{\tabcolsep}{2.6pt}
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{l rrrrrr rrrrrr rrrrrr}
+\toprule
+& \multicolumn{6}{c}{\textbf{GSM8K}} & \multicolumn{6}{c}{\textbf{MATH-500}} & \multicolumn{6}{c}{\textbf{ARC-Challenge}} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}\cmidrule(lr){14-19}
+\textbf{config} & acc & $n_a$ & tok & r$\to$w & w$\to$r & $p$ & acc & $n_a$ & tok & r$\to$w & w$\to$r & $p$ & acc & $n_a$ & tok & r$\to$w & w$\to$r & $p$ \\
+\midrule
+clean & 91.4 & 500 & 1582 & -- & -- & -- & 95.2 & 496 & 2927 & -- & -- & -- & 84.7 & 485 & 1172 & -- & -- & -- \\
+typo25\_real10 & 85.5 & 497 & 1912 & 48 & 19 & 6.2e-04 & 93.9 & 495 & 2945 & 12 & 7 & 0.359 & 86.5 & 487 & 1222 & 24 & 31 & 0.418 \\
+typo25\_real40 & 87.0 & 500 & 1814 & 40 & 18 & 0.006 & 93.4 & 498 & 3111 & 15 & 9 & 0.307 & 85.6 & 486 & 1246 & 28 & 33 & 0.609 \\
+typo25\_real70 & 86.7 & 497 & 1843 & 43 & 19 & 0.003 & 93.9 & 494 & 2992 & 15 & 9 & 0.307 & 82.0 & 489 & 1234 & 42 & 26 & 0.069 \\
+typo50\_real10 & 79.6 & 500 & 2024 & 78 & 19 & $<$1e-6 & 92.8 & 498 & 2939 & 18 & 9 & 0.124 & 81.9 & 487 & 1298 & 41 & 27 & 0.115 \\
+typo50\_real40 & 79.0 & 500 & 2084 & 83 & 21 & $<$1e-6 & 91.4 & 498 & 3085 & 22 & 6 & 0.005 & 82.5 & 485 & 1357 & 42 & 28 & 0.120 \\
+typo50\_real70 & 72.8 & 500 & 2094 & 108 & 15 & $<$1e-6 & 91.5 & 496 & 3087 & 25 & 9 & 0.010 & 82.4 & 484 & 1329 & 45 & 29 & 0.081 \\
+typo75\_real10 & 73.8 & 488 & 2084 & 102 & 14 & $<$1e-6 & 89.1 & 494 & 2945 & 34 & 5 & 7.3e-06 & 80.7 & 488 & 1381 & 55 & 36 & 0.059 \\
+typo75\_real40 & 67.3 & 495 & 2594 & 136 & 17 & $<$1e-6 & 88.1 & 496 & 3125 & 39 & 7 & 4.9e-06 & 77.3 & 485 & 1413 & 63 & 29 & 5.8e-04 \\
+typo75\_real70 & 60.4 & 480 & 2306 & 164 & 14 & $<$1e-6 & 86.9 & 497 & 3138 & 46 & 7 & $<$1e-6 & 74.7 & 486 & 1453 & 75 & 26 & 1.8e-06 \\
+\bottomrule
+\end{tabular}}
+\caption{Every configuration on every dataset. \emph{acc} is answered-only
+accuracy (\%), $n_a$ the number of questions that produced a final answer,
+\emph{tok} the mean generated tokens. r$\to$w and w$\to$r are paired
+right-to-wrong and wrong-to-right flips against the clean condition over jointly
+answered questions, with the continuity-corrected McNemar $p$-value
+\DIFaddbeginFL \DIFaddBFL{(uncorrected for multiple comparisons)}\DIFaddendFL .}
+\label{tab:grid}
+\end{table}
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[H]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \section{\DIFaddBFL{Per-typo logistic fit}}
+\label{app:logit}
+\begin{table}[!ht]
+\DIFaddendFL \centering\DIFdelbeginFL %DIFDELCMD < \scriptsize
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \small
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{lrrr}
+\toprule
+& \textbf{GSM8K} & \textbf{MATH-500} & \textbf{ARC-C} \\
+\midrule
+traces in the fit, $n$ & 4457 & 4466 & 4377 \\
+intercept & +2.097 & +3.019 & +1.670 \\
+coefficient, real-word & -0.0761 & -0.0761 & -0.0418 \\
+coefficient, non-word & -0.0398 & -0.0588 & -0.0078 \\
+odds multiplier, real-word & 0.927 & 0.927 & 0.959 \\
+odds multiplier, non-word & 0.961 & 0.943 & 0.992 \\
+odds lost per real-word typo & 7.3\% & 7.3\% & 4.1\% \\
+odds lost per non-word typo & 3.9\% & 5.7\% & 0.8\% \\
+\midrule
+\textbf{relative loss, real / non-word} & \textbf{1.9$\times$} & \textbf{1.3$\times$} & \textbf{5.3$\times$} \\
+\bottomrule
+\end{tabular}}
+\caption{Per-typo logistic fit behind \DIFdelbeginFL \DIFdelFL{Section~5.2}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{\S\ref{sec:realword}}\DIFaddendFL . One regression per
+dataset, $\text{correct} \sim \text{num\_real} + \text{num\_nonword}$, fitted
+over all answered typo traces pooled across the nine configurations. The
+predictors are the counts of each kind of typo actually applied to that
+question. An odds multiplier is $\exp(\text{coefficient})$: the factor by which
+one additional typo of that kind multiplies the odds of a correct answer.}
+\label{tab:realword-logit}
+\end{table}
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[H]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \section{\DIFaddBFL{Paired real-word contrasts}}
+\label{app:paired}
+\begin{table}[!ht]
+\DIFaddendFL \centering\DIFdelbeginFL %DIFDELCMD < \scriptsize
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \small
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{ll rrr rrr rrr}
+\toprule
+& & \multicolumn{3}{c}{\textbf{GSM8K}} & \multicolumn{3}{c}{\textbf{MATH-500}} & \multicolumn{3}{c}{\textbf{ARC-Challenge}} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}\cmidrule(lr){9-11}
+\textbf{$r$} & \textbf{$\rho$} & $\Delta$acc & r/w & $p$ & $\Delta$acc & r/w & $p$ & $\Delta$acc & r/w & $p$ \\
+\midrule
+25 & 10$\to$70 & +1.0 & 31/36 & 0.625 & +0.0 & 10/10 & 0.823 & -3.8$^{*}$ & 46/28 & 0.048 \\
+25 & 10$\to$40 & +1.4 & 28/35 & 0.450 & +0.0 & 10/10 & 0.823 & -0.4 & 32/30 & 0.899 \\
+25 & 40$\to$70 & -0.4 & 30/28 & 0.896 & -0.2 & 13/12 & 1.000 & -3.8$^{*}$ & 40/22 & 0.031 \\
+50 & 10$\to$70 & -6.8$^{*}$ & 76/42 & 0.002 & -1.4 & 19/12 & 0.281 & +0.6 & 38/41 & 0.822 \\
+50 & 10$\to$40 & -0.6 & 45/42 & 0.830 & -1.4 & 17/10 & 0.248 & +0.0 & 35/35 & 0.905 \\
+50 & 40$\to$70 & -6.2$^{*}$ & 70/39 & 0.004 & -0.2 & 13/12 & 1.000 & -0.9 & 39/35 & 0.727 \\
+75 & 10$\to$70 & -14.1$^{*}$ & 109/43 & $<$1e-6 & -1.8 & 28/19 & 0.243 & -6.7$^{*}$ & 60/28 & 9.5e-04 \\
+75 & 10$\to$40 & -5.8$^{*}$ & 85/57 & 0.023 & -0.2 & 20/19 & 1.000 & -4.0 & 54/35 & 0.056 \\
+75 & 40$\to$70 & -7.8$^{*}$ & 93/56 & 0.003 & -1.6 & 25/17 & 0.280 & -3.4 & 60/44 & 0.141 \\
+\bottomrule
+\end{tabular}}
+\caption{Controlled paired contrast behind \DIFdelbeginFL \DIFdelFL{Section~5.2}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{\S\ref{sec:realword}}\DIFaddendFL , at every typo
+rate and every pair of real-word ratios. Within a fixed $r$ the same words of
+the same questions are corrupted in the same positions, so only the \emph{kind}
+of corruption changes. $\Delta$acc is the accuracy of the higher-$\rho$ variant
+minus the lower, over questions answered in both; \emph{r/w} is right-to-wrong
+against wrong-to-right flips; $p$ is a continuity-corrected McNemar test and
+$^{*}$ marks $p<0.05$ \DIFaddbeginFL \DIFaddBFL{before multiple-comparison correction}\DIFaddendFL .}
+\label{tab:realword-paired}
+\end{table}
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[H]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \section{\DIFaddBFL{Reasoning length and self-doubt markers}}
+\label{app:support}
+\begin{table}[!ht]
+\DIFaddendFL \centering\scriptsize\DIFaddbeginFL \setlength{\tabcolsep}{2.6pt}
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{l rrrrrr rrrrrr rrrrrr}
+\toprule
+& \multicolumn{6}{c}{\textbf{GSM8K}} & \multicolumn{6}{c}{\textbf{MATH-500}} & \multicolumn{6}{c}{\textbf{ARC-Challenge}} \\
+\cmidrule(lr){2-7}\cmidrule(lr){8-13}\cmidrule(lr){14-19}
+\textbf{config} & tok & tok$_{c}$ & tok$_{w}$ & uncert. & 2nd-g. & u.w/c & tok & tok$_{c}$ & tok$_{w}$ & uncert. & 2nd-g. & u.w/c & tok & tok$_{c}$ & tok$_{w}$ & uncert. & 2nd-g. & u.w/c \\
+\midrule
+clean & 1582 & 1406 & 3456 & 7.4 & 13.0 & 1.72 & 2927 & 2803 & 5352 & 6.8 & 12.6 & 1.70 & 1172 & 1025 & 1989 & 14.0 & 11.3 & 1.66 \\
+typo25\_real10 & 1912 & 1511 & 4281 & 12.3 & 14.7 & 1.83 & 2945 & 2826 & 4783 & 7.0 & 11.8 & 1.63 & 1222 & 1120 & 1870 & 14.5 & 11.8 & 1.57 \\
+typo25\_real40 & 1814 & 1567 & 3470 & 12.6 & 14.0 & 1.90 & 3111 & 2900 & 6075 & 7.5 & 13.7 & 1.52 & 1246 & 1114 & 2026 & 13.4 & 11.0 & 1.71 \\
+typo25\_real70 & 1843 & 1537 & 3843 & 13.2 & 14.5 & 2.12 & 2992 & 2859 & 5047 & 8.2 & 13.2 & 1.68 & 1234 & 1066 & 1998 & 14.6 & 10.8 & 1.94 \\
+typo50\_real10 & 2024 & 1554 & 3856 & 15.4 & 14.6 & 1.87 & 2939 & 2763 & 5191 & 7.9 & 12.7 & 1.97 & 1298 & 1184 & 1814 & 14.7 & 11.0 & 1.50 \\
+typo50\_real40 & 2084 & 1631 & 3787 & 15.9 & 14.7 & 1.63 & 3085 & 2839 & 5694 & 8.8 & 12.7 & 1.96 & 1357 & 1206 & 2069 & 16.3 & 11.7 & 1.92 \\
+typo50\_real70 & 2094 & 1501 & 3682 & 17.1 & 14.8 & 1.65 & 3087 & 2854 & 5600 & 8.5 & 13.1 & 1.90 & 1329 & 1180 & 2032 & 16.1 & 11.1 & 1.67 \\
+typo75\_real10 & 2084 & 1588 & 3479 & 18.7 & 14.4 & 1.62 & 2945 & 2787 & 4236 & 8.1 & 12.7 & 2.06 & 1381 & 1232 & 2006 & 17.1 & 11.5 & 1.48 \\
+typo75\_real40 & 2594 & 1786 & 4253 & 21.3 & 14.7 & 1.60 & 3125 & 2881 & 4932 & 9.0 & 12.7 & 2.06 & 1413 & 1263 & 1925 & 18.4 & 11.3 & 1.38 \\
+typo75\_real70 & 2306 & 1652 & 3306 & 21.9 & 14.1 & 1.55 & 3138 & 2912 & 4640 & 9.3 & 12.5 & 1.75 & 1453 & 1263 & 2015 & 19.2 & 11.6 & 1.47 \\
+\bottomrule
+\end{tabular}}
+\caption{Supporting numbers for \DIFdelbeginFL \DIFdelFL{Sections~5.1 }\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{\S\ref{sec:acc} }\DIFaddendFL and \DIFdelbeginFL \DIFdelFL{~5.4}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{\S\ref{sec:doubt}}\DIFaddendFL .
+\emph{tok} is mean generated tokens over all answered traces; \emph{tok}$_{c}$
+and \emph{tok}$_{w}$ are the same mean \DIFdelbeginFL \DIFdelFL{taken }\DIFdelendFL over traces that ended in a correct and
+in a wrong answer. \emph{uncert.} and \emph{2nd-g.}\ are uncertainty and
+second-guessing markers per 1{,}000 reasoning words, and \emph{u.w/c} is
+uncertainty density in wrong-answer traces divided by correct-answer traces.
+Traces \DIFaddbeginFL \DIFaddBFL{generally }\DIFaddendFL lengthen with the typo rate \DIFdelbeginFL \DIFdelFL{on every dataset}\DIFdelendFL \DIFaddbeginFL \DIFaddGFL{(MATH-500 at $\rho{=}10$ is flat)}\DIFaddendFL ,
+a wrong answer is preceded by a longer trace than a correct one in every
+configuration, and uncertainty climbs while second-guessing stays \DIFaddbeginFL \DIFaddBFL{roughly
+}\DIFaddendFL flat.}
+\label{tab:support}
+\end{table}
+
+\DIFdelbegin %DIFDELCMD < \begin{table}[H]
+%DIFDELCMD < %%%
+\DIFdelendFL \DIFaddbeginFL \section{\DIFaddBFL{Word-level repair behaviour}}
+\label{app:repair}
+\begin{table}[!ht]
+\DIFaddendFL \centering\scriptsize\DIFaddbeginFL \setlength{\tabcolsep}{2.6pt}
+\DIFaddendFL \adjustbox{max width=\linewidth}{\begin{tabular}{ll rrrrrr rrrrrr rrrrrr}
+\toprule
+& & \multicolumn{6}{c}{\textbf{GSM8K}} & \multicolumn{6}{c}{\textbf{MATH-500}} & \multicolumn{6}{c}{\textbf{ARC-Challenge}} \\
+\cmidrule(lr){3-8}\cmidrule(lr){9-14}\cmidrule(lr){15-20}
+\textbf{$r$} & \textbf{$\rho$} & silent & flag & mis. & unused & mis$_{c}$ & mis$_{w}$ & silent & flag & mis. & unused & mis$_{c}$ & mis$_{w}$ & silent & flag & mis. & unused & mis$_{c}$ & mis$_{w}$ \\
+\midrule
+25 & 10 & 73.3 & 11.9 & 2.9 & 12.0 & 2.5 & 5.0 & 78.0 & 2.3 & 1.2 & 18.4 & 1.3 & 0.4 & 80.0 & 5.8 & 2.1 & 12.1 & 1.8 & 3.9 \\
+25 & 40 & 70.2 & 15.1 & 4.3 & 10.4 & 3.9 & 6.8 & 73.1 & 5.8 & 1.6 & 19.5 & 1.3 & 3.9 & 74.8 & 9.1 & 3.1 & 13.1 & 2.7 & 5.2 \\
+25 & 70 & 64.6 & 19.3 & 4.8 & 11.3 & 4.3 & 7.7 & 71.4 & 10.2 & 1.7 & 16.8 & 1.4 & 4.1 & 69.6 & 12.2 & 5.3 & 12.9 & 5.0 & 6.4 \\
+50 & 10 & 65.8 & 18.7 & 4.7 & 10.9 & 3.9 & 7.7 & 75.0 & 4.3 & 1.4 & 19.4 & 1.3 & 2.5 & 76.9 & 8.1 & 2.5 & 12.5 & 2.0 & 4.9 \\
+50 & 40 & 60.6 & 23.4 & 5.2 & 10.8 & 5.1 & 5.8 & 70.2 & 8.3 & 2.3 & 19.2 & 2.2 & 3.2 & 71.8 & 11.7 & 3.7 & 12.7 & 3.4 & 5.1 \\
+50 & 70 & 55.9 & 25.3 & 6.6 & 12.2 & 6.1 & 7.8 & 67.2 & 11.3 & 2.9 & 18.6 & 2.4 & 6.0 & 66.7 & 14.2 & 5.4 & 13.7 & 5.1 & 6.2 \\
+75 & 10 & 55.8 & 26.1 & 6.9 & 11.3 & 6.1 & 8.7 & 70.4 & 8.2 & 2.1 & 19.3 & 1.7 & 3.7 & 71.0 & 13.4 & 3.4 & 12.2 & 2.9 & 5.2 \\
+75 & 40 & 47.4 & 32.9 & 8.3 & 11.4 & 6.8 & 11.1 & 68.4 & 9.6 & 2.4 & 19.5 & 1.9 & 4.8 & 65.8 & 16.3 & 5.0 & 12.8 & 4.7 & 6.2 \\
+75 & 70 & 46.2 & 30.9 & 9.6 & 13.3 & 8.0 & 11.9 & 62.2 & 15.2 & 4.0 & 18.5 & 3.5 & 6.0 & 59.4 & 20.3 & 6.9 & 13.3 & 6.1 & 9.3 \\
+\bottomrule
+\end{tabular}}
+\caption{Every corrupted word in every configuration, classified by how the
+reasoning trace handles it, as a percentage of the corrupted words in that
+configuration. \emph{silent} / \emph{flag} / \emph{mis.} / \emph{unused} are the
+four categories of \DIFdelbeginFL \DIFdelFL{Section~5.3}\DIFdelendFL \DIFaddbeginFL \DIFaddBFL{\S\ref{sec:repair}}\DIFaddendFL . \emph{mis}$_{c}$ and \emph{mis}$_{w}$ are
+the misread rate among questions the model answered correctly and among those it
+answered wrongly, which is the comparison behind the claim that misreading is
+associated with failure. Figure~\ref{fig:repair} shows the same data pooled
+along each axis.}
+\label{tab:repair}
+\end{table}
+
+\end{document}
