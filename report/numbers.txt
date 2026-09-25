@@ -1,42 +1,42 @@
 gsm8k: accuracy clean (%)                                            92.6   results/gsm8k/accuracy_per_config.csv
-gsm8k: accuracy typo75_real70 (%)                                    63.9   results/gsm8k/accuracy_per_config.csv
-gsm8k: drop clean -> typo75_real70 (pp)                              28.7   results/gsm8k/accuracy_per_config.csv
+gsm8k: accuracy typo75_real70 (%)                                    64.5   results/gsm8k/accuracy_per_config.csv
+gsm8k: drop clean -> typo75_real70 (pp)                              28.1   results/gsm8k/accuracy_per_config.csv
 gsm8k: strict accuracy clean (%)                                     92.6   results/gsm8k/accuracy_per_config.csv
-gsm8k: strict accuracy typo75_real70 (%)                             61.6   results/gsm8k/accuracy_per_config.csv
-gsm8k: typo75_real70 flips right->wrong / wrong->right / n_both     151/11/482   results/gsm8k/flips_vs_clean.csv
-gsm8k: typo75_real70 McNemar p                                   9.16e-28   results/gsm8k/flips_vs_clean.csv
+gsm8k: strict accuracy typo75_real70 (%)                             62.2   results/gsm8k/accuracy_per_config.csv
+gsm8k: typo75_real70 flips right->wrong / wrong->right / n_both     148/11/482   results/gsm8k/flips_vs_clean.csv
+gsm8k: typo75_real70 McNemar p                                   4.03e-27   results/gsm8k/flips_vs_clean.csv
 gsm8k: configs significant after Holm                                 9/9   results/gsm8k/flips_vs_clean.csv
 gsm8k:   ... which                                         typo25_real10,typo25_real40,typo25_real70,typo50_real10,typo50_real40,typo50_real70,typo75_real10,typo75_real40,typo75_real70   results/gsm8k/flips_vs_clean.csv
-gsm8k: typo75_real70 share of strict drop from wrong answers (%)             93   results/gsm8k/accuracy_per_config.csv
-gsm8k: typo75_real70 share of strict drop from unanswered (%)              7   results/gsm8k/accuracy_per_config.csv
+gsm8k: typo75_real70 share of strict drop from wrong answers (%)             92   results/gsm8k/accuracy_per_config.csv
+gsm8k: typo75_real70 share of strict drop from unanswered (%)              8   results/gsm8k/accuracy_per_config.csv
 gsm8k: mean generated tokens clean                                   1535   results/gsm8k/reasoning_length_absolute.csv
-gsm8k: mean generated tokens typo75_real70                           2322   results/gsm8k/reasoning_length_absolute.csv
+gsm8k: mean generated tokens typo75_real70                           2330   results/gsm8k/reasoning_length_absolute.csv
 gsm8k: max mean generated tokens (config)                  2593 (typo75_real40)   results/gsm8k/reasoning_length_absolute.csv
 gsm8k: wrong answers longer than correct in every config             True   results/gsm8k/length_by_outcome.csv
-gsm8k: per-typo relative loss real/non-word (x) [95% CI]   1.8 [1.4, 2.3]   results/gsm8k/realword_pertypo_logit.csv
-gsm8k: non-word coefficient [95% CI]                       -0.0399 [-0.0527, -0.0280]   results/gsm8k/realword_pertypo_logit.csv
+gsm8k: per-typo relative loss real/non-word (x) [95% CI]   1.7 [1.4, 2.3]   results/gsm8k/realword_pertypo_logit.csv
+gsm8k: non-word coefficient [95% CI]                       -0.0402 [-0.0528, -0.0284]   results/gsm8k/realword_pertypo_logit.csv
 gsm8k: paired r=25 rho 10->70: delta pp | p | p_holm       +1.0 | 0.625 | 1   results/gsm8k/realword_paired.csv
 gsm8k: paired r=25 rho 10->40: delta pp | p | p_holm       +1.4 | 0.45 | 1   results/gsm8k/realword_paired.csv
 gsm8k: paired r=25 rho 40->70: delta pp | p | p_holm       -0.4 | 0.896 | 1   results/gsm8k/realword_paired.csv
 gsm8k: paired r=50 rho 10->70: delta pp | p | p_holm       -6.8 | 0.00238 | 0.0191   results/gsm8k/realword_paired.csv
 gsm8k: paired r=50 rho 10->40: delta pp | p | p_holm       -0.6 | 0.83 | 1   results/gsm8k/realword_paired.csv
 gsm8k: paired r=50 rho 40->70: delta pp | p | p_holm       -6.2 | 0.00406 | 0.0284   results/gsm8k/realword_paired.csv
-gsm8k: paired r=75 rho 10->70: delta pp | p | p_holm       -11.7 | 4.64e-06 | 4.18e-05   results/gsm8k/realword_paired.csv
+gsm8k: paired r=75 rho 10->70: delta pp | p | p_holm       -11.0 | 1.22e-05 | 0.00011   results/gsm8k/realword_paired.csv
 gsm8k: paired r=75 rho 10->40: delta pp | p | p_holm       -6.2 | 0.0157 | 0.094   results/gsm8k/realword_paired.csv
-gsm8k: paired r=75 rho 40->70: delta pp | p | p_holm       -4.2 | 0.101 | 0.504   results/gsm8k/realword_paired.csv
+gsm8k: paired r=75 rho 40->70: delta pp | p | p_holm       -3.6 | 0.162 | 0.811   results/gsm8k/realword_paired.csv
 gsm8k: repair pooled r=25: silent/flagged/misread/unused (%) 71.5/13.2/3.9/11.4   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: repair pooled r=50: silent/flagged/misread/unused (%) 62.7/20.6/5.3/11.5   results/gsm8k/repair_wordlevel_per_config.csv
-gsm8k: repair pooled r=75: silent/flagged/misread/unused (%) 51.1/29.5/7.8/11.6   results/gsm8k/repair_wordlevel_per_config.csv
+gsm8k: repair pooled r=75: silent/flagged/misread/unused (%) 51.0/29.5/7.8/11.6   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: repair pooled rho=10: silent/flagged/misread/unused (%) 62.4/21.4/5.2/10.9   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: repair pooled rho=40: silent/flagged/misread/unused (%) 57.4/25.4/6.2/11.0   results/gsm8k/repair_wordlevel_per_config.csv
-gsm8k: repair pooled rho=70: silent/flagged/misread/unused (%) 55.4/24.5/7.4/12.7   results/gsm8k/repair_wordlevel_per_config.csv
+gsm8k: repair pooled rho=70: silent/flagged/misread/unused (%) 55.3/24.5/7.5/12.7   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: silent fix typo25_real10 / typo75_real10 (%)           74.0 / 55.8   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: words excluded by the clean-baseline control (%)               3.1   results/gsm8k/repair_wordlevel_per_config.csv
 gsm8k: misread wrong/correct ratio, min-max over configs          1.2-2.0   results/gsm8k/repair_wordlevel_by_outcome.csv
 gsm8k: uncertainty per 1k words clean / typo25_real10 / typo75_real10 7.0 / 12.1 / 18.4   results/gsm8k/self_doubt_per_config.csv
 gsm8k: second-guessing per 1k words clean / typo75_real70     11.2 / 12.9   results/gsm8k/self_doubt_per_config.csv
 gsm8k: uncertainty wrong/correct, min-max over typo configs        1.6-2.1   results/gsm8k/self_doubt_by_outcome.csv
-gsm8k: judge: scored / answered traces                        4830 / 4960   results/gsm8k/judge_scalar_*.csv
+gsm8k: judge: scored / answered traces                        4827 / 4960   results/gsm8k/judge_scalar_*.csv
 gsm8k: judge doubt by rho 10/40/70                         5.20/5.29/5.15   results/gsm8k/judge_scalar_*.csv
 gsm8k: judge doubt spread over rho                                   0.14   results/gsm8k/judge_scalar_*.csv
 gsm8k: judge repair wrong vs correct (typo configs)          2.40 vs 0.97   results/gsm8k/judge_scalar_*.csv
@@ -85,14 +85,14 @@ math500: judge repair wrong vs correct (typo configs)        1.36 vs 0.30   resu
 arc: accuracy clean (%)                                              85.2   results/arc/accuracy_per_config.csv
 arc: accuracy typo75_real70 (%)                                      74.5   results/arc/accuracy_per_config.csv
 arc: drop clean -> typo75_real70 (pp)                                10.7   results/arc/accuracy_per_config.csv
-arc: strict accuracy clean (%)                                       83.8   results/arc/accuracy_per_config.csv
+arc: strict accuracy clean (%)                                       84.2   results/arc/accuracy_per_config.csv
 arc: strict accuracy typo75_real70 (%)                               73.0   results/arc/accuracy_per_config.csv
-arc: typo75_real70 flips right->wrong / wrong->right / n_both      76/25/483   results/arc/flips_vs_clean.csv
-arc: typo75_real70 McNemar p                                     6.52e-07   results/arc/flips_vs_clean.csv
+arc: typo75_real70 flips right->wrong / wrong->right / n_both      77/25/485   results/arc/flips_vs_clean.csv
+arc: typo75_real70 McNemar p                                     4.42e-07   results/arc/flips_vs_clean.csv
 arc: configs significant after Holm                                   2/9   results/arc/flips_vs_clean.csv
 arc:   ... which                                           typo75_real40,typo75_real70   results/arc/flips_vs_clean.csv
-arc: typo75_real70 share of strict drop from wrong answers (%)             97   results/arc/accuracy_per_config.csv
-arc: typo75_real70 share of strict drop from unanswered (%)              3   results/arc/accuracy_per_config.csv
+arc: typo75_real70 share of strict drop from wrong answers (%)             95   results/arc/accuracy_per_config.csv
+arc: typo75_real70 share of strict drop from unanswered (%)              5   results/arc/accuracy_per_config.csv
 arc: mean generated tokens clean                                     1167   results/arc/reasoning_length_absolute.csv
 arc: mean generated tokens typo75_real70                             1447   results/arc/reasoning_length_absolute.csv
 arc: max mean generated tokens (config)                    1447 (typo75_real70)   results/arc/reasoning_length_absolute.csv
@@ -120,15 +120,15 @@ arc: misread wrong/correct ratio, min-max over configs            1.3-2.7   resu
 arc: uncertainty per 1k words clean / typo25_real10 / typo75_real10 13.6 / 14.0 / 16.6   results/arc/self_doubt_per_config.csv
 arc: second-guessing per 1k words clean / typo75_real70        9.7 / 10.2   results/arc/self_doubt_per_config.csv
 arc: uncertainty wrong/correct, min-max over typo configs         1.4-1.9   results/arc/self_doubt_by_outcome.csv
-arc: judge: scored / answered traces                          4742 / 4914   results/arc/judge_scalar_*.csv
-arc: judge doubt by rho 10/40/70                           5.33/5.27/5.45   results/arc/judge_scalar_*.csv
-arc: judge doubt spread over rho                                     0.18   results/arc/judge_scalar_*.csv
+arc: judge: scored / answered traces                          4741 / 4916   results/arc/judge_scalar_*.csv
+arc: judge doubt by rho 10/40/70                           5.33/5.28/5.45   results/arc/judge_scalar_*.csv
+arc: judge doubt spread over rho                                     0.17   results/arc/judge_scalar_*.csv
 arc: judge repair wrong vs correct (typo configs)            1.76 vs 0.98   results/arc/judge_scalar_*.csv
 gsm8k warn: mean / min / max accuracy change (pp)          -1.0 / -4.3 / +1.2   results/gsm8k_warn/accuracy_per_config.csv
-gsm8k warn: configs improved / hurt                                   4/5   results/gsm8k_warn/accuracy_per_config.csv
-gsm8k rewrite: mean / min / max accuracy change (pp)       -5.1 / -7.5 / -1.7   results/gsm8k_rewrite/accuracy_per_config.csv
+gsm8k warn: configs improved / hurt                                   3/6   results/gsm8k_warn/accuracy_per_config.csv
+gsm8k rewrite: mean / min / max accuracy change (pp)       -5.2 / -7.6 / -1.7   results/gsm8k_rewrite/accuracy_per_config.csv
 gsm8k rewrite: configs improved / hurt                                0/9   results/gsm8k_rewrite/accuracy_per_config.csv
-gsm8k spell: mean / min / max accuracy change (pp)         -0.5 / -3.9 / +1.5   results/gsm8k_spellcheck/accuracy_per_config.csv
+gsm8k spell: mean / min / max accuracy change (pp)         -0.6 / -3.9 / +1.5   results/gsm8k_spellcheck/accuracy_per_config.csv
 gsm8k spell: configs improved / hurt                                  4/5   results/gsm8k_spellcheck/accuracy_per_config.csv
 gsm8k spell: accuracy typo75_real70 (%)                              62.2   results/gsm8k_spellcheck/accuracy_per_config.csv
 gsm8k: median of per-config median tokens, no fix / rewrite   1299.5 / 736   results/*/reasoning_length_absolute.csv

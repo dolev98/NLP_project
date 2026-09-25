@@ -49,14 +49,14 @@ itself. We introduce a controlled typo generator that independently varies the
 number of corrupted words and the proportion of typos that produce another
 valid English word, apply it to 500 questions from each of GSM8K, MATH-500 and
 ARC-Challenge, and evaluate DeepSeek-R1-Distill-Qwen-7B across all corruption
-settings. Typos consistently reduce accuracy, most on GSM8K, where it falls from
-91.4\% on clean questions to 60.4\% in the most corrupted setting. Typos that
-produce another valid word are more harmful than non-word typos: depending on
-the dataset, a real-word typo is estimated to be 1.3 to 5.3 times more damaging
-per typo. The reasoning traces show that the model often notices that something
+settings. Typos reduce accuracy, most on GSM8K, where it falls from
+92.6\% on clean questions to 64.5\% in the most corrupted setting. Typos that
+produce another valid word are more harmful than non-word typos: a real-word
+typo is estimated to be 1.3 to 1.7 times more damaging per typo on MATH-500 and
+GSM8K, and on ARC-Challenge only real-word typos have a detectable effect. The reasoning traces show that the model often notices that something
 is wrong, with longer reasoning and more uncertainty language, but this does not
 translate into more effective self-correction: the model hesitates more, but
-does not verify more. None of the lightweight mitigations we tested (a typo
+verifies only slightly more. None of the lightweight mitigations we tested on GSM8K (a typo
 warning, rewriting the question first, or an external spell checker)
 consistently improved accuracy. The main challenge is not detecting that the
 input is corrupted, but recovering its intended meaning.
@@ -85,7 +85,7 @@ intended, and recover before producing the final answer. Do they actually do so?
 
 To study this, our typo generator separates two factors: how many words are
 corrupted and what kind of corruption they contain. In particular, we vary the
-share of typos that accidentally produce another valid English word. This allows
+share of typos that produce another valid English word. This allows
 us to compare real-word and non-word typos while keeping the total number of
 typos fixed and using the same questions in every condition, a comparison that,
 to our knowledge, previous LLM typo studies have not made. We evaluate
@@ -102,14 +102,15 @@ strategies: warning the model that the input may contain typos, asking it to
 correct possible typos before solving the problem, and applying an external
 spell checker before the model sees the question.
 
-Our main findings are as follows. Typos cost up to 31 percentage points of
+Our main findings are as follows. Typos cost up to 28.1 percentage points of
 accuracy on GSM8K, and the loss comes from wrong answers rather than truncated
 generations (\S\ref{sec:acc}). At a fixed number of typos, real-word typos are
-more harmful than non-word ones, by 1.3--5.3$\times$ per typo
+more harmful than non-word ones, by 1.3--1.7$\times$ per typo on MATH-500
+and GSM8K, and on ARC only real-word typos have a detectable effect
 (\S\ref{sec:realword}). Contrary to our initial expectation that real-word
 typos would pass unnoticed, the model flags corrupted words, and hedges, more
-often as corruption grows, yet it also misreads more words and does not verify
-more (\S\ref{sec:repair}, \S\ref{sec:doubt}). Finally, none of the three
+often as corruption grows, yet it also misreads more words and verifies only
+slightly more (\S\ref{sec:repair}, \S\ref{sec:doubt}). Finally, none of the three
 mitigations reliably recovers the loss (\S\ref{sec:fixes}).
 
 \input{tables/fig_example_caption}
@@ -193,9 +194,10 @@ typo. Words are selected for corruption before $\rho$ is applied, so for a
 fixed typo rate the number of corrupted words is identical across all values
 of $\rho$.
 
-Each corrupted word receives a character-level edit sampled with weights 0.40
+Each non-word typo receives a character-level edit sampled with weights 0.40
 adjacent-key substitution, 0.20 deletion, 0.20 insertion, and 0.20
-transposition. With probability 0.10, a second edit is applied to the same
+transposition; a real-word typo is drawn from the valid words that these edits
+can reach, weighted by the same probabilities. With probability 0.10, a second edit is applied to the same
 word.
 
 For each question, we convert $\rho$ into a target number of real-word typos,
@@ -242,8 +244,8 @@ dataset rather than across benchmarks.
 \setlength{\tabcolsep}{3.5pt}
 \resizebox{\columnwidth}{!}{\input{tables/tab_datastats}}
 \caption{Dataset and corruption statistics over the nine corrupted conditions
-($r\in\{25,50,75\}\%$, $\rho\in\{10,40,70\}\%$), first 500 questions of GSM8K
-and ARC-Challenge and all of MATH-500. \emph{Eligible words} are those the
+($r\in\{25,50,75\}\%$, $\rho\in\{10,40,70\}\%$), on the first 500 questions of
+GSM8K, the first 500 four-option questions of ARC-Challenge, and all of MATH-500. \emph{Eligible words} are those the
 generator may corrupt, after protected spans, single-character words and
 function words are removed; the typo rate applies to them, and real-word ratios
 are pooled over all corrupted words.}
@@ -261,7 +263,7 @@ Hugging Face API, with temperature 0.6 and top-$p$ 0.95 (the model-card
 defaults, to reflect how a typical user would run it) and one response per
 question. The maximum generation length is 20{,}000 tokens for GSM8K and
 17{,}000 for MATH-500 and ARC-Challenge, which we found sufficient for the model
-to finish on a large majority of questions. For the LLM-based evaluation we use
+to finish on a large majority of questions. For the LLM judge of the reasoning traces we use
 Llama-3.3-70B-Instruct \citep{llama3}, also through the Hugging Face API, with
 temperature 0.
 
@@ -275,8 +277,9 @@ while the instruction remains unchanged and typo-free.
 
 \paragraph{Scoring.}
 We extract the final answer only from the text produced after the closing
-\texttt{</think>} tag. Responses that reach the token limit without producing a
-final answer are marked as unanswered. GSM8K is evaluated using normalized
+\texttt{</think>} tag. Responses without an extractable final
+answer, almost always because they reach the token limit, are marked as
+unanswered. GSM8K is evaluated using normalized
 numeric matching, MATH-500 using symbolic equivalence with
 \texttt{math\_verify}, and ARC using exact answer-letter matching. We report
 accuracy over answered questions together with the number of answered
@@ -294,13 +297,15 @@ within a dataset.
 
 \paragraph{Reasoning trace analysis.}
 We analyze the reasoning traces in three ways. First, word-level alignment
-tracks how the model handles each corrupted word: whether the trace uses the
+tracks how the model handles each corrupted word of three or more letters:
+whether the trace uses the
 original word, the corrupted form, or both, classifying each typo as silently
 fixed, flagged, misread, or not used (\S\ref{sec:repair}). Second, we count
 curated uncertainty and second-guessing expressions, normalized by trace length
 (\S\ref{sec:doubt}). Third, an LLM judge \citep{zheng2023} receives the list of corrupted words
-with their originals, the question as shown to the model, and the reasoning
-trace (its first and last 2{,}000 characters). Using a fixed rubric, it assigns
+with their originals (at most 25), the question as shown to the model (for
+ARC, without the answer options), and the reasoning trace (its first and last
+2{,}000 characters). Using a fixed rubric, it assigns
 a \emph{self-doubt} score from 0 (a clear, straight-line solution) to 10
 (pervasive uncertainty, reversals or looping), and a \emph{repair} score from 0
 (the intended meaning of the question is fully understood) to 5 (the model
@@ -322,37 +327,38 @@ the typo rate; the line is the mean over the three real-word ratios and the band
 spans them. \emph{(b)} the same as a change from clean, in percentage points.
 \emph{(c)} mean generated tokens relative to clean. Accuracy falls with the typo
 rate on all three datasets and falls fastest on GSM8K, where the text carries
-the whole problem. On average, reasoning gets \emph{longer} under typos, so the
+the whole problem and each question receives the most typos. On average, reasoning gets \emph{longer} under typos, so the
 loss is not the model giving up early.}
 \label{fig:accuracy}
 \end{figure*}
 
 Figure~\ref{fig:accuracy} and Table~\ref{tab:grid} in the appendix show the full
-results. On GSM8K, answered-only accuracy drops from 91.4\% on clean questions
-to 60.4\% in the most corrupted condition ($r{=}75$, $\rho{=}70$), a decrease of
-31.0 percentage points. ARC drops from 84.7\% to 74.7\%, and MATH-500 from
+results. On GSM8K, answered-only accuracy drops from 92.6\% on clean questions
+to 64.5\% in the most corrupted condition ($r{=}75$, $\rho{=}70$), a decrease of
+28.1 percentage points. ARC drops from 85.2\% to 74.5\%, and MATH-500 from
 95.2\% to 86.9\%. On all three datasets accuracy is lowest at the highest typo
 rate, although on ARC the mildest rate ($r{=}25$) is still on par with clean.
 
 The paired analysis shows the same trend. In the most corrupted GSM8K condition,
-164 questions change from correct to incorrect, while only 14 change from
-incorrect to correct, out of 480 questions answered in both conditions
-($p < 10^{-6}$). ARC shows 75 correct-to-incorrect versus 26
+148 questions change from correct to incorrect, while only 11 change from
+incorrect to correct, out of 482 questions answered in both conditions
+($p < 10^{-6}$). ARC shows 77 correct-to-incorrect versus 25
 incorrect-to-correct changes, and MATH-500 shows 46 versus 7, both
 significant. After Holm correction, all nine GSM8K conditions remain
 significant, against four on MATH-500 (all at $r \geq 50$) and two on ARC (both
-at $r{=}75$). One possible explanation is how much each task depends on the
-wording of the question: GSM8K problems rely on the text to describe the
+at $r{=}75$). Part of the gap may reflect the larger number of typos per GSM8K
+question at the same rate (Table~\ref{tab:datastats}); another possible
+explanation is how much each task depends on the wording of the question: GSM8K problems rely on the text to describe the
 quantities and relationships needed for the solution, ARC's answer options may
 help the model recover some information, and much of the mathematical content
 of MATH-500 is written in protected \LaTeX{}.
 
 Truncation does not explain the loss. Counting unanswered responses as wrong,
-GSM8K accuracy falls from 91.4\% to 58.0\%; of this strict drop at $r{=}75$,
-$\rho{=}70$, 93\% comes from answered-but-wrong responses and only 7\% from
-truncation, and on MATH-500 and ARC truncation contributes nothing. Typos also
-lengthen the reasoning: on GSM8K the mean trace grows from 1,582 tokens on clean
-questions to 2,306 in the most corrupted condition (and up to 2,594 at
+GSM8K accuracy falls from 92.6\% to 62.2\%; of this strict drop at $r{=}75$,
+$\rho{=}70$, 92\% comes from lower accuracy on answered responses and only 8\% from
+truncation; on MATH-500 truncation contributes nothing and on ARC 5\%. Typos also
+lengthen the reasoning: on GSM8K the mean generated length grows from 1,535 tokens on clean
+questions to 2,330 in the most corrupted condition (and up to 2,593 at
 $r{=}75$, $\rho{=}40$), with smaller increases on MATH-500 and ARC. Wrong
 answers have longer traces than correct ones in every configuration, so
 additional reasoning is associated with difficulty rather than with successful
@@ -379,38 +385,41 @@ For each dataset, we fit a logistic regression that predicts whether the final
 answer is correct from the number of real-word and non-word typos
 (Figure~\ref{fig:realword}a). An additional real-word typo has a stronger
 negative association with correctness than an additional non-word typo: the
-relative per-typo loss is about 1.9$\times$ larger on GSM8K, 1.3$\times$ on
-MATH-500, and 5.3$\times$ on ARC (Table~\ref{tab:realword-logit}).
+relative per-typo loss is about 1.7$\times$ larger on GSM8K (95\% CI 1.4--2.3)
+and 1.3$\times$ on MATH-500 (1.0--1.7). On ARC the estimate is 5.2$\times$,
+but the non-word coefficient is not distinguishable from zero, so the ratio is
+not well defined (Table~\ref{tab:realword-logit}).
 
 The paired comparisons support this pattern, although the effect depends on the
 overall typo rate. On GSM8K at a 75\% typo rate, increasing the real-word share
-from 10\% to 70\% lowers accuracy by 14.1 percentage points, even though the
+from 10\% to 70\% lowers accuracy by 11.0 percentage points, even though the
 same questions contain the same total number of typos. The difference is also
 significant at a 50\% typo rate (both after Holm correction), but not at 25\%.
 When corruption is mild, the model can often handle both kinds of typo, and the
 difference becomes more pronounced as the overall typo rate increases
 (Figure~\ref{fig:realword}b; Table~\ref{tab:realword-paired}). On ARC, the
-effect is significant at $r{=}75$ ($-6.7$\pp{}, surviving correction); two
-contrasts at $r{=}25$ reach $p<0.05$ but do not survive correction, and none at
-$r{=}50$ does. MATH-500 shows no significant difference at any typo rate,
-consistent with its smaller number of corrupted words.
+effect is significant at $r{=}75$ ($-6.9$\pp{}, surviving correction); one
+contrast at $r{=}25$ ($\rho$ 40\arrow 70) reaches $p<0.05$ but does not survive
+correction, and none at
+$r{=}50$ does. MATH-500 shows no significant difference at any typo rate.
 
 Overall, real-word typos appear especially difficult for the model. Unlike
 non-word typos, which produce visibly unusual word forms, they result in valid
 words and can change the meaning of the input without creating an obvious
 tokenization problem.
 
-\subsection{Repair behavior: noticed but not repaired}
+\subsection{Repair behavior: noticed but not always repaired}
 \label{sec:repair}
 
 \begin{figure*}[tbp]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_repair.pdf}
-\caption{\textbf{Word-level repair behavior.} How every corrupted word is
-handled in the reasoning trace. \emph{(a)} against the typo rate, pooled over
+\caption{\textbf{Word-level repair behavior.} How each corrupted word (three
+or more letters, answered questions) is handled in the reasoning trace. \emph{(a)} against the typo rate, pooled over
 real-word ratios. \emph{(b)} against the real-word ratio, pooled over typo
 rates. Silent fixing gives way to explicit flagging and to misreading as either
-the typo rate or the real-word ratio increases, while the share of words never
+the typo rate or the real-word ratio increases (on GSM8K, flagging levels off
+above $\rho{=}40$), while the share of words never
 referred to stays roughly constant. Per-configuration values are in
 Table~\ref{tab:repair}.}
 \label{fig:repair}
@@ -422,33 +431,36 @@ the question, and classify how the model handles it in the reasoning trace:
 intended word without mentioning the typo); \textbf{flagged}, both the original
 and the corrupted form appear (the model noticed and corrected the typo);
 \textbf{misread}, only the corrupted form appears (the model took it as the
-wrong word); and \textbf{not used}, neither form appears.
+wrong word); and \textbf{not used}, neither form appears. We leave out the
+words (about 3\%) whose corrupted form also appears in the model's trace on the
+clean question, since there its presence says nothing about the typo.
 
 We originally expected real-word typos to go unnoticed more often, while
 non-word typos would be easier to detect and correct explicitly. The results
 only partly support this prediction. As the typo rate increases from 25\% to
 75\%, silent fixing decreases on all three datasets; on GSM8K, for example, it
-falls from 73.3\% to 55.8\% at $\rho{=}10$. At the same time, flagging and
-misreading become more common: pooled over real-word ratios, misreading rises
-from 4.0\% to 8.3\% on GSM8K and from 1.5\% to 2.9\% on MATH-500, and less
-steeply on ARC, from 3.5\% to 5.1\% (Figure~\ref{fig:repair};
+falls from 74.0\% to 55.8\% at $\rho{=}10$. At the same time, flagging and
+misreading become more common: pooled over real-word ratios, misreading roughly
+doubles, from 3.9\% to 7.8\% on GSM8K and from 1.4\% to 2.7\% on MATH-500, and
+rises less steeply on ARC, from 2.9\% to 4.6\% (Figure~\ref{fig:repair};
 Table~\ref{tab:repair}).
 
 Increasing the real-word ratio has a similar effect. Pooled across typo rates on
-GSM8K, silent fixing falls from 62.3\% to 52.9\% as $\rho$ increases from 10 to
-70, while flagging rises from 21.0\% to 26.8\% and misreading from 5.4\% to
-7.7\%; the same overall pattern appears on MATH-500 and ARC. Misreading is also
+GSM8K, silent fixing falls from 62.4\% to 55.3\% as $\rho$ increases from 10 to
+70, while flagging rises from 21.4\% to 24.5\% (peaking at 25.4\% at
+$\rho{=}40$) and misreading from 5.2\% to 7.5\%; the same overall pattern appears on MATH-500 and ARC. Misreading is also
 related to failure: in every configuration it is 1.2 to 2.0 times more frequent
-in GSM8K traces that end in a wrong answer, and 1.2 to 2.4 times on ARC; on
+in GSM8K traces that end in a wrong answer, and 1.3 to 2.7 times on ARC; on
 MATH-500, where misreads are rare, the relation is not consistent
 (Table~\ref{tab:repair}). The share of typos that are not used stays stable
 within each dataset but differs across tasks, roughly 12\% on GSM8K, 13\% on
-ARC, and 19\% on MATH-500, possibly because MATH-500 reasoning is more symbolic
+ARC, and 20\% on MATH-500, possibly because MATH-500 reasoning is more symbolic
 and refers back to the wording of the question less often.
 
 The judge's repair score (\S\ref{sec:setup}; Table~\ref{tab:judge}) tells the
-same story. It rises with the typo rate, and wrong answers score higher than
-correct ones (2.30 vs.\ 0.87 on GSM8K), linking misunderstanding of the
+same story. It rises with the typo rate (on MATH-500 only at $r{=}75$), and wrong
+answers score higher than
+correct ones (2.40 vs.\ 0.97 on GSM8K), linking misunderstanding of the
 corrupted question to failure. It also rises with the real-word ratio in every
 dataset and typo-rate cell, consistent with real-word typos being harder to
 repair, although we did not test this trend for significance.
@@ -470,27 +482,29 @@ We measure self-doubt with two curated sets of expressions. The uncertainty set
 contains hedges such as \emph{maybe}, \emph{perhaps}, \emph{possibly},
 \emph{might be}, and \emph{not sure}; the second-guessing set captures explicit
 reconsideration, such as \emph{wait}, \emph{actually}, \emph{reconsider},
-\emph{let me recheck}, and \emph{double-check}. We report matches per 1,000
+\emph{let me recheck}, and \emph{double-check}. We count each expression
+once, even when several patterns match it, and report counts per 1,000
 reasoning words.
 
 Uncertainty increases as the input becomes more corrupted. On GSM8K, it rises
-from 7.4 markers per 1,000 words on clean input to 12.3 at a 25\% typo rate and
-18.7 at 75\%, with the real-word ratio held at 10\%. The same trend holds on
-MATH-500 and ARC at the higher typo rates, although on ARC the mildest rate is
-not above clean. At a fixed typo rate, a higher real-word ratio tends to add
+from 7.0 markers per 1,000 words on clean input to 12.1 at a 25\% typo rate and
+18.4 at 75\%, with the real-word ratio held at 10\%. The same trend holds on
+MATH-500 and ARC at the higher typo rates, although on ARC the mildest rate
+stays close to clean (13.0--14.2 vs.\ 13.6). At a fixed typo rate, a higher real-word ratio tends to add
 further uncertainty (Figure~\ref{fig:doubt}; Table~\ref{tab:support}).
 
 Second-guessing behaves differently. Its density rises only slightly on GSM8K,
-not at all on MATH-500 and ARC, and stays roughly flat across typo rates and
+barely on MATH-500 and ARC, and stays roughly flat across typo rates and
 real-word ratios. The number of second-guessing expressions per trace does grow,
 but mostly because corrupted inputs produce longer traces. Typos thus make the
-model express more uncertainty without making it reconsider its reasoning more
-often.
+model express much more uncertainty but reconsider its reasoning only slightly
+more often.
 
 The contrast is clearer when we separate correct and incorrect answers. For the
 same configuration, uncertainty is consistently more frequent in traces that end
 with a wrong answer: 1.6 to 2.1 times on GSM8K, with similar patterns on ARC and
-MATH-500, while second-guessing differs much less (Table~\ref{tab:support}).
+MATH-500 (Table~\ref{tab:support}), while second-guessing differs much less (1.0 to
+1.4 times).
 This relation is not unique to typos: even on clean GSM8K questions, incorrect
 answers contain substantially more uncertainty language than correct ones.
 
@@ -506,10 +520,11 @@ counts, does not register an additional effect of the kind of corruption.
 \includegraphics[width=\textwidth]{figures/fig_doubt.pdf}
 \caption{\textbf{Self-doubt under typos.} Marker density per 1{,}000
 reasoning words across the grid. Uncertainty markers (solid) rise with
-corruption on all three datasets, most steeply on GSM8K, while second-guessing
-markers (dashed) stay roughly flat: typos make the model express more doubt
-without making it verify more. The same densities split by final answer are in
-Table~\ref{tab:support}.}
+corruption on all three datasets (on ARC only above $r{=}25$), most steeply on
+GSM8K, while second-guessing
+markers (dashed) stay roughly flat: typos make the model express much more doubt
+but verify only slightly more. The ratio of uncertainty density in wrong- to
+correct-answer traces is in Table~\ref{tab:support}.}
 \label{fig:doubt}
 \end{figure*}
 
@@ -521,8 +536,8 @@ We tested the three mitigation strategies from our plan on GSM8K
 
 \paragraph{Warn.}
 Prefixing the prompt with ``Note: the text may contain typos.'' changed
-accuracy by only $-0.5$ percentage points on average across the nine typo
-configurations, with effects ranging from $-4.3$ to $+3.5$ points. This is
+accuracy by only $-1.0$ percentage points on average across the nine typo
+configurations, with effects ranging from $-4.3$ to $+1.2$ points. This is
 consistent with \S\ref{sec:repair}, where the model often already showed signs
 of noticing that the input was corrupted: the limitation does not appear to be
 awareness of the typo itself.
@@ -530,8 +545,8 @@ awareness of the typo itself.
 \paragraph{Rewrite.}
 Instructing the model to first rewrite the question with the typos corrected
 and only then solve it performed worse than the original prompt in all nine
-configurations, reducing accuracy by 4.7 percentage points on average and by up
-to 7.5 points. Median reasoning length also fell, from about 1,300 to about 740
+configurations, reducing accuracy by 5.2 percentage points on average and by up
+to 7.6 points. Median reasoning length also fell, from about 1,300 to about 740
 tokens (median over the nine typo configurations). One possible explanation is
 that the rewrite step forces the model to commit to a single interpretation of
 the corrupted question too early; if the reconstruction is wrong, the model
@@ -539,13 +554,14 @@ reasons about the wrong problem with little opportunity to recover.
 
 \paragraph{Spell check.}
 We applied an external spell checker (\texttt{pyspellchecker}, edit distance 2,
-prose words only) to the same questions before sending them to the model. A
+prose words of four or more letters only) to the same questions before sending them to the model. A
 typo counts as recovered only if it is restored exactly to the original word.
-Recovery dropped as the share of real-word typos increased: from 54.9\% at
+Recovery dropped as the share of real-word typos increased: from 55.0\% at
 $\rho{=}10$ to 39.9\% at $\rho{=}40$ and 25.8\% at $\rho{=}70$. This lexical
 recovery did not translate into a consistent accuracy gain: the spell checker
-changed accuracy by $-0.1$ percentage points on average, improving five
-conditions and hurting four, with 62.2\% in the hardest condition. Spell
+changed accuracy by $-0.6$ percentage points on average, improving four
+conditions and hurting five, including the hardest one (62.2\% against 64.5\%
+without it). Spell
 checkers detect non-word errors far better than real-word substitutions, and
 may even replace a non-word typo with a wrong valid word, creating the kind of
 error that \S\ref{sec:realword} found to be more harmful.
@@ -565,11 +581,11 @@ The mean row is taken over the nine typo configurations.}
 \section{Discussion}
 % =====================================================================
 
-The most consistent finding across our analyses is that real-word typos are more
-harmful than non-word typos, in the per-typo regression, the paired comparisons,
-and the spell-checker results. One might expect the opposite, since non-word
+A recurring finding across our analyses is that real-word typos are more harmful
+than non-word typos, in the per-typo regression and in the paired comparisons at
+higher typo rates, and they are also harder for the spell checker to restore. One might expect the opposite, since non-word
 typos disrupt tokenization. Our results suggest that a non-word typo is visibly
-unusual and signals that something is wrong, whereas a real-word typo is fluent,
+unusual and is more often repaired silently, whereas a real-word typo is fluent,
 tokenized normally, and may fit the sentence well enough that its wrong meaning
 is taken at face value. The same property makes it hard for dictionary-based
 correction, which can only act on forms that are not valid words.
@@ -577,7 +593,7 @@ correction, which can only act on forms that are not valid words.
 The trace analysis points to a related conclusion. The model often notices that
 the input is unusual: uncertainty language increases, corrupted words are
 flagged more often, and traces become longer. This additional effort does not
-reliably lead to recovery, which also explains why the mitigations had little
+reliably lead to recovery, which may also explain why the mitigations had little
 effect: a warning adds information the model often already has, while a forced
 rewrite commits it early to a single, possibly wrong, interpretation. The main
 difficulty is therefore not detecting that a typo exists, but recovering the
@@ -594,22 +610,21 @@ self-correction: incorrect answers produce longer traces even on clean input.
 \section{Conclusion}
 % =====================================================================
 
-Typos have a clear and consistent effect on reasoning performance. On GSM8K,
-accuracy dropped by as much as 31 percentage points, with larger declines as the
-corruption rate increased, and the strongest effect came from typos that turned
-one valid English word into another. The main problem is not that the model
+Typos have a clear effect on reasoning performance. On GSM8K,
+accuracy dropped by as much as 28.1 percentage points, with larger declines as the
+corruption rate increased, and, per typo, the strongest effect came from typos that
+turned one valid English word into another. The main problem is not that the model
 fails to notice corrupted input: it often recognizes that something is wrong,
-but cannot reliably recover the intended meaning. Its traces show more
-uncertainty rather than more verification, and neither prompting strategies nor
+but cannot reliably recover the intended meaning. Its traces show much
+more uncertainty but only slightly more verification, and neither prompting strategies nor
 dictionary-based correction consistently improved performance. Robustness to
 everyday typing errors should therefore be treated as a capability to be
 developed explicitly, rather than assumed from strong benchmark performance.
 
 All code is available in the project repository, and the raw generation logs are
 hosted on the Hugging Face Hub (\texttt{Dolevabudi/silent-tax-results}).
-All reported results can be reproduced by running \texttt{download\_data.py},
-\texttt{run\_all.py}, \texttt{llm\_judge.py} and \texttt{make\_assets.py}, as
-described in the repository README.
+All reported results can be reproduced from them with the steps in the
+repository README.
 
 % =====================================================================
 \section*{Limitations}
@@ -620,14 +635,15 @@ All headline results come from a single 7B reasoning model at one decoding
 setting with $n{=}1$ sample per question. Our plan called for several samples per
 question, but the API budget did not permit it, so we cannot separate typo
 effects from decoding variance at the level of an individual question. The
-overall effects are much larger than expected sampling noise (McNemar
-$p < 10^{-6}$ on $n{=}480$ paired items), but generalization to larger reasoning
+effects in the most corrupted condition are much larger than expected sampling
+noise (McNemar $p < 10^{-6}$ on every dataset), but generalization to larger reasoning
 models is untested.
 
 \paragraph{Dataset substitution.}
 We originally planned to use GPQA-Diamond \citep{rein2024}, but replaced it with ARC-Challenge,
-which is also a multiple-choice science dataset. On clean GPQA-Diamond, the
-model reached only about 52\% accuracy. Since random guessing gives 25\%, this
+which is also a multiple-choice science dataset. In a preliminary run that is not
+part of the released results, the model reached only about 52\% accuracy on
+clean GPQA-Diamond. Since random guessing gives 25\%, this
 leaves limited room to measure further drops under corruption: as performance
 gets closer to chance, changes in accuracy become harder to interpret as
 reasoning failures rather than guessing. ARC-Challenge is easier and its answer
@@ -686,7 +702,7 @@ verification when AI tools are used in research.
 \input{tables/tab_grid}
 \caption{Every configuration on every dataset. \emph{acc} is answered-only
 accuracy (\%), $n_a$ the number of questions that produced a final answer,
-\emph{tok} the mean generated tokens. r$\to$w and w$\to$r are paired
+\emph{tok} the mean generated tokens over answered traces. r$\to$w and w$\to$r are paired
 right-to-wrong and wrong-to-right flips against the clean condition over jointly
 answered questions, with the continuity-corrected McNemar $p$-value
 (uncorrected for multiple comparisons).}
@@ -731,7 +747,7 @@ and \emph{tok}$_{w}$ are the same mean over traces that ended in a correct and
 in a wrong answer. \emph{uncert.} and \emph{2nd-g.}\ are uncertainty and
 second-guessing markers per 1{,}000 reasoning words, and \emph{u.w/c} is
 uncertainty density in wrong-answer traces divided by correct-answer traces.
-Traces generally lengthen with the typo rate (MATH-500 at $\rho{=}10$ is flat),
+Traces generally lengthen with the typo rate (MATH-500 at $\rho{=}10$ and $\rho{=}40$ is flat),
 a wrong answer is preceded by a longer trace than a correct one in every
 configuration, and uncertainty climbs while second-guessing stays roughly
 flat.}
@@ -742,9 +758,11 @@ flat.}
 \centering
 \scriptsize
 \input{tables/tab_repair}
-\caption{Every corrupted word in every configuration, classified by how the
-reasoning trace handles it, as a percentage of the corrupted words in that
-configuration. \emph{silent} / \emph{flag} / \emph{mis.} / \emph{unused} are the
+\caption{Every corrupted word of three or more letters in every answered
+question of every configuration, classified by how the reasoning trace handles
+it, as a percentage of the corrupted words in that configuration; words whose
+corrupted form also appears in the model's trace on the clean question (about
+3\% overall, more at higher $\rho$) are left out. \emph{silent} / \emph{flag} / \emph{mis.} / \emph{unused} are the
 four categories of \S\ref{sec:repair}. \emph{mis}$_{c}$ and \emph{mis}$_{w}$ are
 the misread rate among questions the model answered correctly and among those it
 answered wrongly, which is the comparison behind the claim that misreading is

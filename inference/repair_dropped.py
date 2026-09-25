@@ -6,16 +6,18 @@ transport failure, not model behaviour. Two shapes occur, both far below the
 token cap and without a recorded finish_reason:
 
   empty final   the stream died inside the reasoning: no final-answer section
-  cut final     the stream died inside the final answer: the final section stops
-                mid-sentence, with no \\boxed{} answer and no "answer" statement
-                (a bare multiple-choice line such as "D) confident" is complete)
+  cut final     the stream died inside the final answer. The final section has an
+                unclosed \\boxed{, or it holds no answer at all (no closed \\boxed{}
+                and no "answer" statement) and either stops mid-sentence, belongs
+                to a math dataset, or yields no answer for the scorer (a bare
+                multiple-choice line such as "D) confident" is complete)
 
 Rows that stop at the token cap are real truncation and are kept.
 
 The removed rows are regenerated with identical prompts by re-running
 run_typo_api.py, whose resume mode fills in exactly the questions missing from
 each file. rerun_manifest.json lists every row regenerated this way: 57 ARC rows
-with an empty final (August 2026) and 44 rows with a cut final (37 GSM8K, 7 ARC;
+with an empty final (August 2026) and 50 rows with a cut final (40 GSM8K, 10 ARC;
 September 2026).
 
     python inference/repair_dropped.py --run gsm8k --dry-run    # list, change nothing
@@ -27,17 +29,35 @@ import os, re, sys, json, shutil, argparse
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def dropped(row, answered, cap):
-    """'empty' or 'cut' if the row is a cut-off stream, else None."""
+def boxes(text):
+    """[(content, closed)] for every \\boxed{ in text, balancing nested braces."""
+    out = []
+    for m in re.finditer(r"\\boxed\{", text):
+        depth, i = 1, m.end()
+        while i < len(text) and depth:
+            depth += {"{": 1, "}": -1}.get(text[i], 0)
+            i += 1
+        out.append((text[m.end():i - 1] if depth == 0 else text[m.end():], depth == 0))
+    return out
+
+
+def dropped(row, answered, cap, math=True):
+    """'empty' or 'cut' if the row is a cut-off stream, else None.
+    math: the dataset asks for a \\boxed{} number or expression (GSM8K, MATH-500)."""
     if row.get("finish_reason") or (row.get("n_gen_tokens") or 0) >= cap:
         return None
     final = (row.get("final_answer_text") or "").strip()
     if not final:
         return None if answered else "empty"
-    if ("\\boxed" in final or re.search(r"(?i)\banswer\b", final)
-            or re.search(r"[.!?)\]]\**\s*$", final) or re.match(r"\**\s*[A-D]\)", final)):
-        return None
-    return "cut"
+    bx = boxes(final)
+    if any(not closed for _, closed in bx):
+        return "cut"                                    # stopped inside \\boxed{...
+    if any(closed for _, closed in bx) or re.search(r"(?i)\banswer\b", final) \
+            or re.match(r"\**\s*[A-D]\)", final):
+        return None                                     # an answer is there
+    if not re.search(r"[.!?)\]]\**\s*$", final) or math or not answered:
+        return "cut"
+    return None
 
 
 def main():
@@ -48,7 +68,7 @@ def main():
     args = ap.parse_args()
     os.environ["NLP_RUN"] = args.run
     sys.path.insert(0, os.path.join(os.path.dirname(HERE), "analysis"))
-    from common import MAX_NEW_TOKENS, config_files, parse_tag, eval_row
+    from common import MAX_NEW_TOKENS, BASE_DATASET, config_files, parse_tag, eval_row
 
     manifest = {}
     for path in config_files():
@@ -56,7 +76,7 @@ def main():
         kept, removed = [], {"empty": [], "cut": []}
         for line in open(path, encoding="utf-8"):
             r = json.loads(line)
-            kind = dropped(r, eval_row(r)["answered"], MAX_NEW_TOKENS)
+            kind = dropped(r, eval_row(r)["answered"], MAX_NEW_TOKENS, BASE_DATASET != "arc")
             if kind:
                 removed[kind].append(r["idx"])
             else:

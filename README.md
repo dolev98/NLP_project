@@ -43,6 +43,7 @@ analysis/        turn generations into tables
 results/<run>/   the analysis tables (CSV) behind every number in the report
 report/          report.tex, make_assets.py, generated figures/ and tables/,
                  numbers.txt (every number the prose quotes, with its source)
+  versions/      earlier versions of the report and a change-marked copy
 ```
 
 A *run* is one set of generations: `gsm8k`, `math500`, `arc` (main grid) and
@@ -174,9 +175,9 @@ and number exactly.
   a stream mid-generation, leaving a partial trace far below the token cap. These
   rows were removed with `inference/repair_dropped.py` and regenerated with
   identical prompts through the runner's resume mode: 57 ARC rows with no final
-  answer (31 in `clean`, 26 in `typo50_real40`; August 2026) and 44 rows whose final
-  answer stopped mid-sentence (GSM8K `clean` 6, `typo75_real10` 6, `typo75_real70` 25;
-  ARC `clean` 4, `typo50_real40` 3; September 2026). `inference/rerun_manifest.json`
+  answer (31 in `clean`, 26 in `typo50_real40`; August 2026) and 50 rows whose final
+  answer was cut off (GSM8K `clean` 6, `typo75_real10` 6, `typo75_real70` 28; ARC
+  `clean` 6, `typo50_real40` 4; September 2026). `inference/rerun_manifest.json`
   lists them; every other row is as generated. One regenerated GSM8K row
   (`typo75_real70`, question 477) ran to the 20,000-token cap.
 - **Runner revisions.** The main-grid runs (GSM8K, MATH-500, ARC) were made with
@@ -189,17 +190,22 @@ and number exactly.
   `v1`, Llama-3.3-70B-Instruct via the Hugging Face router, temperature 0; the
   router's provider was not recorded). The prompt lists the corrupted words from a
   difflib alignment of the clean and typo question, which `llm_judge.py` keeps so
-  that it rebuilds the same prompts. Coverage of the answered traces: GSM8K 4,830 of
-  4,960, MATH-500 4,564 of 4,962, ARC 4,742 of 4,914. The rest have no score:
+  that it rebuilds the same prompts. Coverage of the answered traces: GSM8K 4,827 of
+  4,960, MATH-500 4,564 of 4,962, ARC 4,741 of 4,916. The rest have no score:
   the judge's reply could not be parsed (GSM8K 94, MATH-500 398, ARC 64; mostly
   LaTeX backslashes in quoted evidence), the trace was regenerated after judging
-  (GSM8K 36, ARC 63), or the trace counts as answered only under the corrected ARC
+  (GSM8K 39, ARC 66), or the trace counts as answered only under the corrected ARC
   answer reading (ARC 45). They were not re-judged: in September 2026 the same
   prompt through the router scored self-doubt about 0.5 points higher on 30
   already-scored traces (repair unchanged), so mixing the two would bias exactly
   these traces. The current `llm_judge.py` parses such replies, retries failures and
   stores the judge model, prompt version and a hash of the judged trace with every
   row.
+
+## Report versions
+
+`report/report.pdf` is the submitted report. `report/versions/` keeps the earlier
+versions and a change-marked copy; see `report/versions/README.md`.
 
 ## License
 
