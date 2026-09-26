@@ -1,0 +1,289 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:full_analysis/self_doubt.py
++++ NEW dolev98/NLP_project@f5d6c41:analysis/self_doubt.py
+@@ -1,41 +1,31 @@
+-"""Dimension 3 of the proposal: SELF-DOUBT via doubt-marker frequency.
++"""Self-doubt: frequency of doubt markers in the reasoning, over answered questions.
+ 
+-(This is the lexical half only — the separate LLM-judge rating is intentionally
+-NOT implemented here.)
+-
+-For each ANSWERED trace we count doubt markers in the reasoning text and report
+-two things, because markers and trace length are entangled (doubt makes traces
+-longer, so a pure per-token rate can hide the effect):
+-  - absolute: mean markers per trace
+-  - density : markers per 1,000 reasoning words
+-
+-Markers are a curated, transparent set anchored on the proposal's own examples
+-(wait / hmm / actually / let me reconsider) plus tight variants, counted
+-individually so the mix is visible.
+-
+-Key hypothesis test (proposal): real-word typos cause SILENT confident failures.
+-=> among WRONG answers, doubt should FALL as the real-word ratio rises.
+-
+-Answered-only (truncated traces excluded). Outputs: printed tables + CSVs.
+-    python self_doubt.py
++Two curated marker sets (whole-word, case-insensitive):
++  second_guess  explicit reconsideration: wait, hmm, actually, reconsider,
++                but wait, hold on, let me recheck, double-check, ...
++  uncertainty   hedging: maybe, perhaps, possibly, might be, not sure, ...
++
++Each doubt expression is counted ONCE per category: when several patterns match
++overlapping text ("but wait" matches both "but wait" and "wait"; "let me
++double-check" matches "let me recheck" and "double-check"), the overlapping
++matches are merged into one occurrence.
++
++Reported per config as markers per 1,000 reasoning words (density) and per trace,
++and split by final outcome (correct vs wrong).
++Outputs results/<run>/{self_doubt_per_config, self_doubt_by_outcome}.csv
++    NLP_RUN=gsm8k python analysis/self_doubt.py
+ """
+-import os, sys, re, csv, json, argparse
++import os, sys, re, json
+ 
+ try:
+     sys.stdout.reconfigure(encoding="utf-8")
+ except Exception:
+     pass
+ 
+-from common import config_files, parse_tag, load_evals, TABLES, DATASET
++from common import config_files, parse_tag, load_evals, write_csv, TABLES, RUN  # noqa: E402
+ 
+-# Doubt markers in two transparent categories, chosen after checking each one's
+-# clean-vs-typo discrimination on this data (see the commit notes / word-bank test):
+-#   second_guess = the proposal's canonical set + direct reversals. Note that the
+-#                  proposal's own "let me reconsider" is ~0 here (kept for fidelity),
+-#                  and "wait"/"hmm" are near-baseline (in ~97% of CLEAN traces).
+-#   uncertainty  = hedging / "not certain" family; "maybe" carries the most signal.
+-# Typo-NOTICING words (typo, misspell, "probably means") are deliberately excluded —
+-# those are repair behaviour (dimension 4), not internal second-guessing.
++# "let me reconsider" is ~0 on this data but kept from the proposal's own examples;
++# typo-NOTICING words (typo, misspelled) are repair behaviour, not self-doubt.
+ MARKER_CATS = {
+     "second_guess": {
+         "wait":              r"\bwait\b",
+@@ -64,21 +54,33 @@
+         "not entirely":        r"\bnot entirely\b",
+     },
+ }
+-# flat name -> (category, compiled regex)
+-MARKERS = {name: cat for cat, d in MARKER_CATS.items() for name in d}
+-COMPILED = {name: re.compile(rx, re.I) for cat, d in MARKER_CATS.items() for name, rx in d.items()}
+ CATS = list(MARKER_CATS)
++COMPILED = {cat: [re.compile(rx, re.I) for rx in d.values()] for cat, d in MARKER_CATS.items()}
++SHORT = {"second_guess": "2g", "uncertainty": "un", "total": "tot"}
++
++
++def count_category(text, cat):
++    """Number of doubt expressions of one category in text; overlapping matches
++    of different patterns count as one expression."""
++    spans = sorted((m.start(), m.end()) for rx in COMPILED[cat] for m in rx.finditer(text))
++    n, end = 0, -1
++    for start, stop in spans:
++        if start >= end:
++            n += 1
++            end = stop
++        else:
++            end = max(end, stop)
++    return n
+ 
+ 
+ def count_markers(text):
+-    """Return {marker: count}, {category: count}, and grand total for one string."""
+-    counts = {k: len(rx.findall(text)) for k, rx in COMPILED.items()}
+-    cat_counts = {c: sum(counts[k] for k in MARKER_CATS[c]) for c in CATS}
+-    return counts, cat_counts, sum(counts.values())
++    """{category: count} and the total over categories for one string."""
++    cat_counts = {c: count_category(text, c) for c in CATS}
++    return cat_counts, sum(cat_counts.values())
+ 
+ 
+ def analyze_file(path):
+-    """Per answered trace: marker counts, category counts, reasoning words, outcome."""
++    """Per answered trace: category counts, reasoning words, outcome."""
+     ev = load_evals(path)
+     recs = []
+     for line in open(path, encoding="utf-8"):
+@@ -87,146 +89,79 @@
+         if not e["answered"]:
+             continue
+         reasoning = r.get("reasoning", "") or ""
+-        counts, cat_counts, total = count_markers(reasoning)
+-        words = max(len(reasoning.split()), 1)
+-        recs.append(dict(idx=r["idx"], counts=counts, cat=cat_counts, total=total,
+-                         words=words, correct=e["correct"], real=r.get("real_ratio")))
++        cat_counts, total = count_markers(reasoning)
++        recs.append(dict(idx=r["idx"], cat=cat_counts, total=total,
++                         words=max(len(reasoning.split()), 1), correct=e["correct"]))
+     return recs
+ 
+ 
+-# Which doubt categories are active (set from --no-2guess in main). "total" always
+-# means the sum over ACTIVE_CATS, so excluding a category also drops it from totals.
+-ACTIVE_CATS = list(MARKER_CATS)
+-SHORT = {"second_guess": "2guess", "uncertainty": "uncert"}
+-SHORT2 = {"second_guess": "2g", "uncertainty": "un", "total": "tot"}
+-
+-
+ def density(recs, key="total"):
+-    """markers per 1000 words over a group of records.
+-    key='total' = sum over ACTIVE_CATS; otherwise a single category name."""
+-    cats = ACTIVE_CATS if key == "total" else [key]
++    """Markers per 1,000 reasoning words over a group of traces."""
++    cats = CATS if key == "total" else [key]
+     m = sum(sum(x["cat"][c] for c in cats) for x in recs)
+     w = sum(x["words"] for x in recs)
+     return (m / w * 1000) if w else 0.0
+ 
+ 
+ def per_trace(recs, key="total"):
+-    """mean markers per trace; key='total' = sum over ACTIVE_CATS, else one category."""
++    """Mean markers per trace."""
+     if not recs:
+         return 0.0
+-    cats = ACTIVE_CATS if key == "total" else [key]
++    cats = CATS if key == "total" else [key]
+     return sum(sum(x["cat"][c] for c in cats) for x in recs) / len(recs)
+ 
+ 
+ def main():
+-    global ACTIVE_CATS
+-    ap = argparse.ArgumentParser(description=__doc__)
+-    ap.add_argument("--no-2guess", action="store_true",
+-                    help="exclude the (flat, uninformative) second_guess category")
+-    args = ap.parse_args()
+-    if args.no_2guess:
+-        ACTIVE_CATS = ["uncertainty"]
+-    multi = len(ACTIVE_CATS) > 1   # only show a 'total' column when >1 category
+-
+-    files = config_files()
+-    tags, meta, DATA = [], {}, {}
+-    for f in files:
++    tags, DATA = [], {}
++    for f in config_files():
+         t = parse_tag(f)
+-        tags.append(t["tag"]); meta[t["tag"]] = t
++        tags.append(t["tag"])
+         DATA[t["tag"]] = analyze_file(f)
+ 
+-    # ---- per-config summary (by category) --------------------------------
+-    active_str = " + ".join(ACTIVE_CATS)
+-    print(f"=== {DATASET}: self-doubt marker frequency (answered-only) | categories: {active_str} ===")
+-    print("/1k = markers per 1,000 reasoning words (length-normalised);"
+-          " /tr = mean markers per answer\n")
+-    cols = [f"{SHORT[c]}/1k" for c in ACTIVE_CATS] + (["total/1k"] if multi else []) \
+-         + [f"{SHORT[c]}/tr" for c in ACTIVE_CATS] + (["total/tr"] if multi else [])
+-    print(f"{'config':16s}{'n_ans':>7}" + "".join(f"{c:>11}" for c in cols))
++    print(f"=== {RUN}: doubt markers per 1,000 reasoning words (answered only) ===")
++    print(f"{'config':16s}{'n_ans':>7}" + "".join(f"{c + '/1k':>16}" for c in CATS + ["total"]))
+     sum_csv = []
+     for tag in tags:
+         recs = DATA[tag]
+-        d = {c: density(recs, c) for c in ACTIVE_CATS}
+-        t = {c: per_trace(recs, c) for c in ACTIVE_CATS}
+-        vals = [d[c] for c in ACTIVE_CATS] + ([density(recs, "total")] if multi else []) \
+-             + [t[c] for c in ACTIVE_CATS] + ([per_trace(recs, "total")] if multi else [])
+-        print(f"{tag:16s}{len(recs):>7}" + "".join(f"{v:>11.2f}" for v in vals))
+         row = dict(config=tag, n_answered=len(recs))
+-        for c in ACTIVE_CATS:
+-            row[f"{c}_per_1k"] = round(d[c], 3)
+-            row[f"{c}_per_trace"] = round(t[c], 3)
+-        if multi:
+-            row["total_per_1k"] = round(density(recs, "total"), 3)
+-            row["total_per_trace"] = round(per_trace(recs, "total"), 3)
++        for c in CATS:
++            row[f"{c}_per_1k"] = round(density(recs, c), 3)
++            row[f"{c}_per_trace"] = round(per_trace(recs, c), 3)
++        row["total_per_1k"] = round(density(recs, "total"), 3)
++        row["total_per_trace"] = round(per_trace(recs, "total"), 3)
++        for c in CATS:
++            row[f"{c}_n"] = sum(x["cat"][c] for x in recs)
++        row["words"] = sum(x["words"] for x in recs)
++        print(f"{tag:16s}{len(recs):>7}" + "".join(
++            f"{row[c + '_per_1k'] if c != 'total' else row['total_per_1k']:>16.2f}"
++            for c in CATS + ["total"]))
+         sum_csv.append(row)
+-    _write_csv(os.path.join(TABLES, "self_doubt_per_config.csv"), sum_csv)
++    write_csv(os.path.join(TABLES, "self_doubt_per_config.csv"), sum_csv)
+ 
+-    # ---- per-marker: clean vs pooled-typo density + discrimination -------
+-    # Shows which individual markers actually respond to typos (delta vs clean).
+-    clean_recs = DATA["clean"]
+-    typo_recs = [x for tag in tags if not meta[tag]["is_clean"] for x in DATA[tag]]
+-    # All markers in the bank, RANKED by discrimination (typo minus clean density),
+-    # so the strongest typo-responsive words are on top and the dead ones (e.g.
+-    # reconsider = 0) fall to the bottom. Nothing is filtered out.
+-    print("\n=== per-marker density (mk/1k words): clean vs pooled-typo, ranked by discrimination ===")
+-    print(f"{'marker':20s}{'cat':>14}{'clean':>9}{'typo':>9}{'Δ (signal)':>12}")
+-    def mdensity(recs, name):
+-        m = sum(x["counts"][name] for x in recs); w = sum(x["words"] for x in recs)
+-        return (m / w * 1000) if w else 0.0
+-    marker_rows = []
+-    for cat in ACTIVE_CATS:
+-        for name in MARKER_CATS[cat]:
+-            dc, dt = mdensity(clean_recs, name), mdensity(typo_recs, name)
+-            marker_rows.append((name, cat, dc, dt, dt - dc))
+-    marker_rows.sort(key=lambda r: r[4], reverse=True)   # by discrimination, desc
+-    mk_csv = []
+-    for name, cat, dc, dt, disc in marker_rows:
+-        print(f"{name:20s}{cat:>14}{dc:>9.2f}{dt:>9.2f}{disc:>+12.2f}")
+-        mk_csv.append(dict(marker=name, category=cat, clean_per_1k=round(dc, 3),
+-                           typo_per_1k=round(dt, 3), discrimination=round(disc, 3)))
+-    _write_csv(os.path.join(TABLES, "self_doubt_by_marker.csv"), mk_csv)
+-
+-    # ---- doubt by outcome (correct vs wrong), split by category ----------
+-    keys = list(ACTIVE_CATS) + (["total"] if multi else [])
+-    print("\n=== self-doubt density by outcome (markers per 1,000 words) ===")
+-    print("per category; w/c = wrong-over-correct ratio\n")
+-    hdr = f"{'config':16s}"
+-    for k in keys:
+-        s = SHORT2[k]
+-        hdr += f"{s+'_corr':>9}{s+'_wrong':>10}{s+'_w/c':>8}"
+-    print(hdr)
++    print("\n=== density by outcome (w/c = wrong over correct) ===")
+     oc_csv = []
+     for tag in tags:
+         recs = DATA[tag]
+         corr = [x for x in recs if x["correct"]]
+         wrong = [x for x in recs if not x["correct"]]
+         row = {"config": tag}
+-        line = f"{tag:16s}"
+-        for k in keys:
++        for k in CATS + ["total"]:
+             dc, dw = density(corr, k), density(wrong, k)
+             wc = dw / dc if dc else 0
+-            line += f"{dc:>9.2f}{dw:>10.2f}{wc:>8.2f}"
+-            row[f"{SHORT2[k]}_correct"] = round(dc, 3)
+-            row[f"{SHORT2[k]}_wrong"] = round(dw, 3)
+-            row[f"{SHORT2[k]}_wrong_over_correct"] = round(wc, 3)
+-        print(line)
++            row[f"{SHORT[k]}_correct"] = round(dc, 3)
++            row[f"{SHORT[k]}_wrong"] = round(dw, 3)
++            row[f"{SHORT[k]}_wrong_over_correct"] = round(wc, 3)
++        for k in CATS:
++            row[f"{SHORT[k]}_n_correct"] = sum(x["cat"][k] for x in corr)
++            row[f"{SHORT[k]}_n_wrong"] = sum(x["cat"][k] for x in wrong)
++        row["words_correct"] = sum(x["words"] for x in corr)
++        row["words_wrong"] = sum(x["words"] for x in wrong)
++        print(f"{tag:16s}" + "".join(f"{row[SHORT[k] + '_wrong_over_correct']:>10.2f}"
++                                     for k in CATS + ["total"]))
+         oc_csv.append(row)
+-    _write_csv(os.path.join(TABLES, "self_doubt_by_outcome.csv"), oc_csv)
+-
+-    # NOTE: real-word-ratio comparisons (doubt vs real10/40/70, silent-failure test)
+-    # live in real_word_effect.py, which isolates the real-word axis properly. They
+-    # were removed here to keep self_doubt focused on the doubt dimension per config.
+-
++    write_csv(os.path.join(TABLES, "self_doubt_by_outcome.csv"), oc_csv)
+     print(f"\ntables written to {TABLES}")
+ 
+ 
+-def _write_csv(path, rows):
+-    if not rows:
+-        return
+-    with open(path, "w", newline="", encoding="utf-8") as f:
+-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+-        w.writeheader(); w.writerows(rows)
+-
+-
+ if __name__ == "__main__":
+     main()

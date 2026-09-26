@@ -1,0 +1,100 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:full_analysis/download_data.py
++++ NEW dolev98/NLP_project@f5d6c41:analysis/download_data.py
+@@ -1,42 +1,68 @@
+-"""Download a dataset's model-result files from the Hub into data/<dataset>/.
++"""Download the paper's raw generations and judge scores from the Hub.
+ 
+-The raw JSONL (~66 MB for gsm8k) is not committed; it lives on the public dataset
+-repo Dolevabudi/typo-results under results/<dataset>/. Run once after cloning:
++Everything lives in the public dataset repo Dolevabudi/silent-tax-results, laid
++out exactly like the local data/ folder:
+ 
+-    pip install huggingface_hub
+-    python download_data.py                 # gsm8k (default)
+-    python download_data.py --dataset math500
++    raw/<run>/<run>_<config>.jsonl      one model generation per question
++    judge/<run>_judge_traces.jsonl      LLM-judge scores per trace
+ 
+-Then run the analysis with:  python run_all.py --dataset <dataset>
++analysis/data_manifest.json pins the repo revision and the sha256 of every file,
++so the download is checked against the exact data the tables were built from.
++
++    python analysis/download_data.py --run gsm8k     # one run's generations
++    python analysis/download_data.py --all           # every run + judge scores
++    python analysis/download_data.py --judge         # judge scores only
+ """
+-import os, shutil, argparse
+-from huggingface_hub import HfApi, hf_hub_download
++import os, json, shutil, hashlib, argparse
++
++from huggingface_hub import hf_hub_download
++
++REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data_manifest.json")
++
+ 
+-REPO = "Dolevabudi/typo-results"
+-_HERE = os.path.dirname(os.path.abspath(__file__))
++def sha256(path):
++    h = hashlib.sha256()
++    with open(path, "rb") as f:
++        for block in iter(lambda: f.read(1 << 20), b""):
++            h.update(block)
++    return h.hexdigest()
++
++
++def fetch(manifest, path):
++    dest = os.path.join(REPO_ROOT, "data", path)
++    want = manifest["files"][path]["sha256"]
++    if os.path.exists(dest) and sha256(dest) == want:
++        return "present"
++    tmp = hf_hub_download(manifest["repo"], path, repo_type="dataset",
++                          revision=manifest["revision"])
++    if sha256(tmp) != want:
++        raise SystemExit(f"checksum mismatch for {path}")
++    os.makedirs(os.path.dirname(dest), exist_ok=True)
++    shutil.copyfile(tmp, dest)
++    return "downloaded"
+ 
+ 
+ def main():
+-    ap = argparse.ArgumentParser()
+-    ap.add_argument("--dataset", default="gsm8k", help="gsm8k | math500 | gpqa | ...")
+-    ap.add_argument("--repo", default=REPO, help="HF dataset repo holding the results")
++    ap = argparse.ArgumentParser(description=__doc__,
++                                 formatter_class=argparse.RawDescriptionHelpFormatter)
++    g = ap.add_mutually_exclusive_group(required=True)
++    g.add_argument("--run", help="gsm8k | math500 | arc | gsm8k_warn | gsm8k_rewrite | gsm8k_spellcheck")
++    g.add_argument("--all", action="store_true", help="every run and the judge scores")
++    g.add_argument("--judge", action="store_true", help="the judge scores only")
+     args = ap.parse_args()
+ 
+-    dest = os.path.join(_HERE, "data", args.dataset)
+-    os.makedirs(dest, exist_ok=True)
+-    prefix = f"results/{args.dataset}/"
+-    files = [f for f in HfApi().list_repo_files(args.repo, repo_type="dataset")
+-             if f.endswith(".jsonl") and f.startswith(prefix)]
+-    if not files:
+-        raise SystemExit(f"no {args.dataset} result files under {prefix} in {args.repo}")
+-    for f in sorted(files):
+-        tmp = hf_hub_download(args.repo, f, repo_type="dataset")
+-        # results/<ds>/typo25/real10.jsonl -> <ds>_typo25_real10.jsonl
+-        leaf = f[len(prefix):].replace(".jsonl", "").replace("/", "_")
+-        name = f"{args.dataset}_{leaf}.jsonl"
+-        shutil.copyfile(tmp, os.path.join(dest, name))
+-        print("downloaded", name)
+-    print(f"\n{len(files)} files -> {dest}\nnext: python run_all.py --dataset {args.dataset}")
++    manifest = json.load(open(MANIFEST, encoding="utf-8"))
++    paths = sorted(manifest["files"])
++    if args.run:
++        paths = [p for p in paths if p.startswith(f"raw/{args.run}/")]
++    elif args.judge:
++        paths = [p for p in paths if p.startswith("judge/")]
++    if not paths:
++        raise SystemExit(f"nothing in the manifest for {args.run!r}")
++    for p in paths:
++        print(f"{fetch(manifest, p):10s} data/{p}", flush=True)
++    print(f"{len(paths)} files verified against {os.path.basename(MANIFEST)}")
+ 
+ 
+ if __name__ == "__main__":

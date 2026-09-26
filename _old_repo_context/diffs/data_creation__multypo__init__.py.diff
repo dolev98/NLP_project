@@ -1,0 +1,52 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:data_creation/multypo/__init__.py
++++ NEW dolev98/NLP_project@f5d6c41:data_creation/keyboard_typos.py
+@@ -1,9 +1,21 @@
+-"""Small local keyboard-aware typo generator used by typo_pipeline."""
++"""Keyboard-aware single-edit typo generator (QWERTY adjacency).
++
++A small, self-contained reimplementation of the four edit operations used by
++MulTypo (Zhao et al., 2026; https://github.com/cisnlp/multypo): adjacent-key
++replacement, deletion, insertion of a neighbouring key, and transposition of two
++adjacent letters. It keeps MulTypo's generator interface but none of its code or
++its hand-aware key weighting; neighbours here are the plain QWERTY adjacency
++graph. This module generated the published typo datasets (idoazou/*-typos).
++
++`candidate_distribution` enumerates every word reachable with one edit together
++with its probability under the sampling distribution; typo_pipeline.py uses it
++to draw real-word typos in proportion to how likely they are to occur naturally.
++"""
+ 
+ from __future__ import annotations
+ 
+ import random
+-from typing import Dict, Iterable, List, Tuple
++from typing import Dict, List, Tuple
+ 
+ 
+ _KEY_ROWS = ("qwertyuiop", "asdfghjkl", "zxcvbnm")
+@@ -24,16 +36,14 @@
+         _ADJACENT_KEYS[key] = tuple(sorted(neighbours))
+ 
+ 
+-class MultiTypoGenerator:
++class KeyboardTypoGenerator:
+     """Generate one typo at a time using simple QWERTY-aware operations."""
+ 
+     def __init__(
+         self,
+-        language: str = "english",
+         use_excluding_set: bool = True,
+         typo_distribution: Dict[str, float] | None = None,
+     ) -> None:
+-        self.language = language
+         self.typo_distribution = typo_distribution or {}
+         self.ignore_set = _english_ignore_set() if use_excluding_set else set()
+ 
+@@ -173,4 +183,4 @@
+     }
+ 
+ 
+-__all__ = ["MultiTypoGenerator"]
+\ No newline at end of file
++__all__ = ["KeyboardTypoGenerator"]
+\ No newline at end of file
