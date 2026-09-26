@@ -1,0 +1,129 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:full_analysis/accuracy_flips.py
++++ NEW dolev98/NLP_project@f5d6c41:analysis/accuracy_flips.py
+@@ -1,31 +1,29 @@
+-"""Dimension 1 of the proposal: ACCURACY & FLIPS, truncation-aware.
++"""Accuracy and flips, truncation-aware.
+ 
+-Per config it reports three accuracy views so "didn't finish" is never confused
+-with "answered wrong":
+-  - completion   = fraction that produced a real final answer (not truncated)
+-  - acc|answered = accuracy among finished traces (reasoning quality)
+-  - acc(strict)  = correct / all, truncated counts as wrong  [headline]
+-                   (= completion * acc|answered)
+-
+-It then, vs the clean baseline (paired by question idx):
+-  - counts flips across the 3 states correct/wrong/unanswered (3x3 transitions),
+-  - runs McNemar on strict correctness,
+-  - decomposes the accuracy drop into a "didn't finish" part and a
+-    "finished but wrong" part.
++Per config, three accuracy views, so "did not finish" is never read as "wrong":
++  completion   = share of questions with an extractable final answer
++  acc|answered = accuracy among answered questions (the paper's headline measure)
++  acc(strict)  = correct / all questions, unanswered counted as wrong
++
++Against the clean baseline (paired by question idx):
++  flips        = right->wrong and wrong->right over questions answered in both,
++                 with a continuity-corrected McNemar test and a Holm correction
++                 over the nine typo configs of the run
++  decomposition of the strict-accuracy drop into a "did not finish" part and a
++                 "finished but wrong" part
+ 
+-Outputs: printed tables + CSVs under analysis/tables/. Run:
+-    python accuracy_flips.py
++Outputs results/<run>/{accuracy_per_config, flips_vs_clean, accuracy_decomposition}.csv
++    NLP_RUN=gsm8k python analysis/accuracy_flips.py
+ """
+-import os, sys, csv
+-from collections import defaultdict, Counter
++import os, sys
+ 
+ try:
+     sys.stdout.reconfigure(encoding="utf-8")   # Δ and → in a cp1252 console
+ except Exception:
+     pass
+ 
+-from common import (config_files, parse_tag, load_evals, bootstrap_ci,
+-                    mcnemar, TABLES, DATASET)
++from common import (config_files, parse_tag, load_evals, bootstrap_ci,  # noqa: E402
++                    mcnemar, holm, sig6, write_csv, TABLES, RUN)
+ 
+ 
+ def summarize(evals):
+@@ -57,7 +55,7 @@
+     cs = S["clean"]
+ 
+     # ---- per-config table -------------------------------------------------
+-    print(f"=== {DATASET}: accuracy (truncation-aware) ===")
++    print(f"=== {RUN}: accuracy (truncation-aware) ===")
+     print(f"{'config':16s}{'n':>5}{'trunc%':>8}{'compl%':>8}{'acc|ans':>9}"
+           f"{'acc(strict)':>12}{'95% CI':>16}{'Δstrict':>9}{'capped%':>9}")
+     rows_csv = []
+@@ -69,10 +67,11 @@
+               f"{s['acc_answered']:>9.1%}{s['acc_strict']:>12.1%}{ci:>16}{d:>9}"
+               f"{s['capped']/s['n']:>9.1%}")
+         rows_csv.append(dict(config=tag, n=s["n"], n_answered=s["answered"],
++                             n_correct=s["correct"],
+                              acc_answered=round(s["acc_answered"], 4),
+                              acc_strict=round(s["acc_strict"], 4),
+-                             ci_lo=round(s["ci"][0], 4), ci_hi=round(s["ci"][1], 4)))
+-    _write_csv(os.path.join(TABLES, "accuracy_per_config.csv"), rows_csv)
++                             strict_ci_lo=round(s["ci"][0], 4), strict_ci_hi=round(s["ci"][1], 4)))
++    write_csv(os.path.join(TABLES, "accuracy_per_config.csv"), rows_csv)
+ 
+     # ---- flips vs clean: ANSWERED-only (truncated pairs excluded) ---------
+     # A question contributes to flips only if it was answered in BOTH clean and
+@@ -80,7 +79,7 @@
+     print("\n=== flips vs clean (answered-only; ratios over n_both) ===")
+     print(f"{'config':16s}{'n_both':>7}{'dropped':>8}{'r→w':>6}{'w→r':>6}"
+           f"{'r→w%':>7}{'w→r%':>7}{'net%':>7}{'McNemar p':>11}")
+-    flip_csv = []
++    flip_csv, exact_p = [], []
+     for tag in tags:
+         if tag == "clean":
+             continue
+@@ -103,7 +102,8 @@
+         w2r_r = w2r / n_both if n_both else 0.0
+         net_r = r2w_r - w2r_r
+         b_, c_, stat, p = mcnemar(bc, cc)
+-        pstr = f"{p:.2e}" if p is not None else "n/a"
++        exact_p.append(p)
++        pstr = f"{p:.2e}"
+         print(f"{tag:16s}{n_both:>7}{dropped:>8}{r2w:>6}{w2r:>6}"
+               f"{r2w_r:>7.1%}{w2r_r:>7.1%}{net_r:>7.1%}{pstr:>11}")
+         flip_csv.append(dict(config=tag, n_both=n_both,
+@@ -111,8 +111,10 @@
+                              r2w_ratio=round(r2w_r, 4), w2r_ratio=round(w2r_r, 4),
+                              net_flip_ratio=round(net_r, 4),
+                              mcnemar_b=b_, mcnemar_c=c_, mcnemar_stat=round(stat, 3),
+-                             mcnemar_p=(round(p, 8) if p is not None else None)))
+-    _write_csv(os.path.join(TABLES, "flips_vs_clean.csv"), flip_csv)
++                             mcnemar_p=sig6(p)))
++    for row, adj in zip(flip_csv, holm(exact_p)):
++        row["mcnemar_p_holm"] = sig6(adj)
++    write_csv(os.path.join(TABLES, "flips_vs_clean.csv"), flip_csv)
+ 
+     # ---- decomposition: how much of the drop is "didn't finish" -----------
+     print("\n=== accuracy-drop decomposition vs clean "
+@@ -131,7 +133,7 @@
+         dec_csv.append(dict(config=tag, delta_strict=round(delta, 4),
+                             completion_component=round(completion_loss, 4),
+                             quality_component=round(quality_loss, 4)))
+-    _write_csv(os.path.join(TABLES, "accuracy_decomposition.csv"), dec_csv)
++    write_csv(os.path.join(TABLES, "accuracy_decomposition.csv"), dec_csv)
+ 
+     # ---- rate x real matrices --------------------------------------------
+     for title, field, fmt in [("acc(strict)", "acc_strict", "{:.1%}"),
+@@ -153,13 +155,5 @@
+     print(f"\ntables written to {TABLES}")
+ 
+ 
+-def _write_csv(path, rows):
+-    if not rows:
+-        return
+-    with open(path, "w", newline="", encoding="utf-8") as f:
+-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+-        w.writeheader(); w.writerows(rows)
+-
+-
+ if __name__ == "__main__":
+     main()

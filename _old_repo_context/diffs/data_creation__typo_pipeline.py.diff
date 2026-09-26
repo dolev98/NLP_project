@@ -1,0 +1,715 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:data_creation/typo_pipeline.py
++++ NEW dolev98/NLP_project@f5d6c41:data_creation/typo_pipeline.py
+@@ -1,112 +1,60 @@
+ #!/usr/bin/env python
+ # -*- coding: utf-8 -*-
+-"""
+-typo_pipeline.py
+-================
+-
+-Typo-generation and dataset-binning pipeline for the "how typos affect
+-reasoning LLMs" study.
+-
+-Pipeline overview
+------------------
+-1. Load a (small, local-dev) subset of the ``MATH-500`` dataset.
+-2. For every *problem* (a "row") inject keyboard-aware typos into the
+-   ``problem`` text using the local ``multypo`` package. Numbers and
+-   mathematical expressions (LaTeX) are protected and never corrupted.
+-   Every problem receives **at least one** typo so it can be compared
+-   one-to-one against the zero-typo baseline model.
+-3. For each corrupted word, use ``nltk.corpus.words`` to decide whether the
+-   produced typo is a *real word* (exists in the English dictionary) or a
+-   *non-word*. Per-problem counts are stored.
+-4. Score each problem by the real-word ratio ::
+-
+-       P = (real-word typos) / (total words actually changed)
+-
+-   The denominator only counts words that were genuinely modified.
+-5. Use :func:`pandas.cut` to split the problems into ``REAL_TOKEN_GROUPS``
+-   bins (e.g. 0-25%, 25-50%, 50-75%, 75-100%) and emit one dataset per bin.
+-
+-The script is fully OS-agnostic: all paths go through :mod:`pathlib`/``os``,
+-and parallelism uses :meth:`datasets.Dataset.map` with ``num_proc`` (which
+-works with both ``fork`` on Linux and ``spawn`` on Windows). The heavy shared
+-objects (the dictionary set and the typo generator) are lazily built once per
+-worker process via module-level caches.
++"""Controlled real-word typo injection for one question.
+ 
+-Run locally::
++For every question the generator corrupts a fixed share of the eligible prose
++words (the typo rate r) and tries to make a target share of those typos land on
++another valid English word (the real-word ratio rho); the rest become non-words.
++
++  * Eligible words are ASCII-letter runs of length >= 2 outside protected spans
++    (LaTeX math, LaTeX commands, numbers) and outside a small function-word list.
++  * Words are chosen before rho is applied, so for a fixed r and seed the same
++    words are corrupted at every rho; only the kind of typo changes.
++  * Each typo is one keyboard edit (replace / delete / insert / transpose), or
++    two edits with probability two_edit_prob.
++  * A typo is a "real word" if it is in nltk.corpus.words. Real-word typos are
++    drawn from every real word reachable with that many edits, weighted by how
++    likely the edit is; if a word has none, it gets a non-word typo instead.
++  * Seeding is per row (seed + row index), so every row is reproducible on its own.
+ 
+-    python typo_pipeline.py
++generate_variants.py applies this to whole datasets.
+ """
+ 
+ from __future__ import annotations
+ 
+-import os
+ import random
+ import re
+ from dataclasses import dataclass, field
+-from pathlib import Path
+ from typing import Dict, List, Optional, Tuple
+ 
+-import numpy as np
+-import pandas as pd
+-
+-# ---------------------------------------------------------------------------
+-# Configuration
+-# ---------------------------------------------------------------------------
+-
+ 
+ @dataclass(frozen=True)
+ class Config:
+-    """Central, tweakable configuration for the pipeline."""
++    """One dataset variant: source dataset plus typo rate and real-word ratio."""
+ 
+-    # --- data loading (local-dev mode) ---
+-    dataset_name: str = "HuggingFaceH4/MATH-500"
+-    dataset_config_name: Optional[str] = None
++    dataset_name: str = "openai/gsm8k"
++    dataset_config_name: Optional[str] = "main"
+     dataset_split: str = "test"
+-    subset_size: int = 50          # keep small for local Windows testing
+-    text_field: str = "problem"    # only this field receives typos
+-    # Offline support (useful behind a corporate firewall that blocks the Hub).
+-    # If set, load the dataset from this local path instead of the Hub. It may
+-    # be a directory saved via ``save_to_disk`` or a ``.json``/``.parquet`` file.
+-    local_data_path: Optional[Path] = None
+-    # If the Hub/NLTK are unreachable, fall back to a tiny built-in mock so the
+-    # pipeline logic can still be smoke-tested locally.
+-    allow_offline_fallback: bool = True
+-    # Optional local newline-separated dictionary to replace nltk.corpus.words
+-    # when the corpus cannot be downloaded.
+-    local_words_path: Optional[Path] = None
+-
+-    # --- typo generation ---
+-    language: str = "english"
+-    typo_rate: float = 0.30        # fraction of eligible words to corrupt
+-    # Probability weights for the 4 techniques required by the proposal:
+-    #   replace   = adjacent-key substitution
+-    #   transpose = swapping two letters
+-    #   delete    = deletion of a letter
+-    #   insert    = insertion of a letter
++    subset_size: int = 10**9       # first N rows of the source split
++    text_field: str = "question"    # only this field receives typos
++
++    typo_rate: float = 0.25          # fraction of eligible words to corrupt
++    target_real_fraction: float = 0.10   # target share of typos that are real words
++    # Edit weights: replace = adjacent-key substitution, transpose = swap two
++    # adjacent letters, delete = drop a letter, insert = add a neighbouring key.
+     typo_weights: Tuple[Tuple[str, float], ...] = (
+         ("delete", 0.20),
+         ("insert", 0.20),
+         ("replace", 0.40),
+         ("transpose", 0.20),
+     )
+-    min_word_len: int = 2          # words shorter than this are never typo'd
+-    real_word_retry_attempts: int = 1  # (natural mode only) retries for a real-word typo
+-
+-    # --- controlled real-word-ratio mode ---
+-    target_real_fraction: Optional[float] = None  # target fraction of real-word typos; None = natural mode
++    min_word_len: int = 2              # shorter words are never corrupted
+     two_edit_prob: float = 0.10        # probability a typo gets 2 edits instead of 1
+     nonword_retry_attempts: int = 10   # redraws to avoid an accidental real word
+ 
+-    # --- binning ---
+-    real_token_groups: int = 4     # number of P-ratio bins
+-
+-    # --- execution ---
+-    num_proc: int = 1              # 1 for local Windows dev; raise on Slurm
++    num_proc: int = 1
+     seed: int = 42
+ 
+-    # --- output ---
+-    out_dir: Path = Path(__file__).resolve().parent / "typo_dataset"
+-
+     @property
+     def typo_weights_dict(self) -> Dict[str, float]:
+         return {name: w for name, w in self.typo_weights}
+@@ -116,65 +64,10 @@
+ 
+ 
+ # ---------------------------------------------------------------------------
+-# Offline fallbacks (only used when the Hub / NLTK cannot be reached)
+-# ---------------------------------------------------------------------------
+-
+-# A handful of MATH-500-style problems (with LaTeX) so the pipeline can be
+-# smoke-tested without network access. These mirror the real schema fields.
+-_MOCK_PROBLEMS: List[dict] = [
+-    {
+-        "problem": r"What is the value of $\frac{3}{4} + \frac{1}{8}$ when "
+-                   r"expressed as a common fraction in lowest terms?",
+-        "answer": r"\frac{7}{8}",
+-        "subject": "Prealgebra", "level": 2, "unique_id": "mock/0",
+-    },
+-    {
+-        "problem": r"A triangle has sides of length 3, 4 and 5 units. "
+-                   r"Compute its area in square units.",
+-        "answer": "6", "subject": "Geometry", "level": 1, "unique_id": "mock/1",
+-    },
+-    {
+-        "problem": r"If $x^2 - 5x + 6 = 0$, what is the sum of all possible "
+-                   r"values of $x$?",
+-        "answer": "5", "subject": "Algebra", "level": 3, "unique_id": "mock/2",
+-    },
+-    {
+-        "problem": r"Evaluate $\sqrt{144}$ and then multiply the result by "
+-                   r"seven to obtain the final integer answer.",
+-        "answer": "84", "subject": "Prealgebra", "level": 1, "unique_id": "mock/3",
+-    },
+-    {
+-        "problem": r"How many distinct positive divisors does the number "
+-                   r"$60$ have in total?",
+-        "answer": "12", "subject": "Number Theory", "level": 2, "unique_id": "mock/4",
+-    },
+-]
+-
+-# Minimal fallback dictionary for real-word detection when the NLTK corpus is
+-# unavailable. This is NOT a substitute for the full corpus (the real run on
+-# Slurm uses nltk.corpus.words); it only lets local smoke tests classify a few
+-# common words as "real".
+-_FALLBACK_WORDS: frozenset = frozenset(
+-    w.lower()
+-    for w in (
+-        "what is the value of when expressed as a common fraction in lowest "
+-        "terms triangle has sides length and units compute its area square "
+-        "if sum all possible values evaluate then multiply result by seven to "
+-        "obtain final integer answer how many distinct positive divisors does "
+-        "number have total the and for with from into over under about above "
+-        "below between word real none same time part place work case point "
+-        "government company system program question during without before "
+-        "great small large little other another which their there these those "
+-        "where when while because through against around before behind beside"
+-    ).split()
+-)
+-
+-
+-# ---------------------------------------------------------------------------
+ # Math / number protection
+ # ---------------------------------------------------------------------------
+ 
+-# Spans matched here are considered "protected" and are never corrupted.
++# Spans matched here are never corrupted.
+ # Order matters: display math ($$...$$) must be tried before inline math.
+ _PROTECTED_PATTERN = re.compile(
+     r"\$\$.*?\$\$"          # display math  $$ ... $$
+@@ -191,6 +84,7 @@
+ _WORD_PATTERN = re.compile(r"[A-Za-z]+")
+ 
+ 
++
+ def find_protected_spans(text: str) -> List[Tuple[int, int]]:
+     """Return ``(start, end)`` character spans that must not be corrupted."""
+     return [(m.start(), m.end()) for m in _PROTECTED_PATTERN.finditer(text)]
+@@ -205,78 +99,36 @@
+ 
+ 
+ # ---------------------------------------------------------------------------
+-# Lazily-initialised shared resources (built once per process)
++# Shared resources, built once per process
+ # ---------------------------------------------------------------------------
+ 
+ _WORD_SET: Optional[frozenset] = None
+-_GENERATOR = None  # type: ignore[var-annotated]
++_GENERATOR = None
+ 
+ 
+ def get_nltk_word_set() -> frozenset:
+-    """
+-    Return a lowercase set of valid English words from ``nltk.corpus.words``.
+-
+-    The corpus is downloaded on first use if it is missing. The result is
+-    cached in a module-level global so each worker process builds it once.
+-    """
++    """Lower-cased nltk.corpus.words, downloading the corpus on first use."""
+     global _WORD_SET
+-    if _WORD_SET is not None:
+-        return _WORD_SET
+-
+-    # 1) User-provided local dictionary file takes priority.
+-    if CONFIG.local_words_path and Path(CONFIG.local_words_path).exists():
+-        with open(CONFIG.local_words_path, encoding="utf-8") as fh:
+-            _WORD_SET = frozenset(line.strip().lower() for line in fh if line.strip())
+-        return _WORD_SET
+-
+-    # 2) Try the real NLTK corpus (downloading it if the network allows).
+-    try:
++    if _WORD_SET is None:
+         import nltk
+         from nltk.corpus import words as nltk_words
+-
+         try:
+-            nltk_words.words()  # force access; raises LookupError if missing
++            nltk_words.words()
+         except LookupError:
+             nltk.download("words", quiet=True)
+-            from nltk.corpus import words as nltk_words
+-
+         _WORD_SET = frozenset(w.lower() for w in nltk_words.words())
+-        return _WORD_SET
+-    except Exception as exc:  # network blocked, corpus missing, etc.
+-        if not CONFIG.allow_offline_fallback:
+-            raise
+-        print(
+-            f"[warn] nltk.corpus.words unavailable ({exc.__class__.__name__}); "
+-            f"using a tiny fallback dictionary. Real-word detection will be "
+-            f"approximate. Provide Config.local_words_path or run on a machine "
+-            f"with network access for accurate results."
+-        )
+-        _WORD_SET = _FALLBACK_WORDS
+-        return _WORD_SET
++    return _WORD_SET
+ 
+ 
+ def get_generator():
+-    """Return a cached :class:`multypo.MultiTypoGenerator` for this process."""
++    """The keyboard typo generator (see keyboard_typos.py), cached per process."""
+     global _GENERATOR
+-    if _GENERATOR is not None:
+-        return _GENERATOR
+-
+-    try:
+-        from multypo import MultiTypoGenerator
+-    except ImportError:
+-        try:
+-            from .multypo import MultiTypoGenerator
+-        except ImportError:
+-            try:
+-                from typo_generator import MultiTypoGenerator
+-            except ImportError:
+-                from .typo_generator import MultiTypoGenerator
+-
+-    _GENERATOR = MultiTypoGenerator(
+-        language=CONFIG.language,
+-        use_excluding_set=True,
+-        typo_distribution=CONFIG.typo_weights_dict.copy(),
+-    )
++    if _GENERATOR is None:
++        from keyboard_typos import KeyboardTypoGenerator
++        _GENERATOR = KeyboardTypoGenerator(
++            use_excluding_set=True,
++            typo_distribution=CONFIG.typo_weights_dict.copy(),
++        )
+     return _GENERATOR
+ 
+ 
+@@ -325,105 +177,6 @@
+     return word, False, None
+ 
+ 
+-def _apply_typo_with_real_word_retries(
+-    generator,
+-    word: str,
+-    word_set: frozenset,
+-    typo_types: List[str],
+-    type_weights: List[float],
+-    max_attempts: int,
+-) -> Tuple[str, bool, bool, Optional[str]]:
+-    """Try typo candidates for one word until one is a real English word.
+-
+-    Returns ``(new_word, changed, is_real_word, technique)``.
+-    """
+-    attempts = max(1, max_attempts)
+-    fallback_word = word
+-    fallback_changed = False
+-    fallback_tech: Optional[str] = None
+-
+-    for _ in range(attempts):
+-        new_word, changed, tech = _apply_one_typo(generator, word, typo_types, type_weights)
+-        if not changed:
+-            continue
+-        if not fallback_changed:
+-            fallback_word = new_word
+-            fallback_changed = True
+-            fallback_tech = tech
+-        if new_word.lower() in word_set:
+-            return new_word, True, True, tech
+-
+-    return fallback_word, fallback_changed, False, fallback_tech
+-
+-
+-def apply_typos_to_text(
+-    text: str,
+-    generator,
+-    word_set: frozenset,
+-    typo_rate: float,
+-    min_word_len: int,
+-    real_word_retry_attempts: int,
+-) -> TypoResult:
+-    """
+-    Inject typos into ``text`` and classify each change as real/non-word.
+-
+-    Only plain prose words (ASCII letters, not inside a protected math span,
+-    not a known number word) are eligible. At least one typo is always applied
+-    when at least one eligible word exists.
+-    """
+-    protected = find_protected_spans(text)
+-    ignore_set = getattr(generator, "ignore_set", set())
+-
+-    eligible = [
+-        m
+-        for m in _WORD_PATTERN.finditer(text)
+-        if (m.end() - m.start()) >= min_word_len
+-        and not _overlaps_any(m.start(), m.end(), protected)
+-        and m.group().lower() not in ignore_set
+-    ]
+-
+-    if not eligible:
+-        # No prose to corrupt (essentially never happens for MATH-500).
+-        return TypoResult(text=text, total=0, real=0, nonword=0)
+-
+-    # Guarantee >= 1 typo; never round down to zero.
+-    n_target = max(1, round(typo_rate * len(eligible)))
+-    n_target = min(n_target, len(eligible))
+-    chosen = random.sample(eligible, n_target)
+-
+-    typo_types = list(CONFIG.typo_weights_dict.keys())
+-    type_weights = list(CONFIG.typo_weights_dict.values())
+-
+-    result = TypoResult(text=text, total=0, real=0, nonword=0)
+-    replacements: List[Tuple[int, int, str]] = []
+-    for match in chosen:
+-        original = match.group()
+-        new_word, changed, is_real_word, tech = _apply_typo_with_real_word_retries(
+-            generator,
+-            original,
+-            word_set,
+-            typo_types,
+-            type_weights,
+-            real_word_retry_attempts,
+-        )
+-        if not changed:
+-            continue
+-        result.total += 1
+-        if is_real_word:
+-            result.real += 1
+-        else:
+-            result.nonword += 1
+-        result.originals.append(original)
+-        result.corrupted.append(new_word)
+-        result.techniques.append(tech or "")
+-        result.edit_counts.append(1)
+-        result.real_flags.append(bool(is_real_word))
+-        replacements.append((match.start(), match.end(), new_word))
+-
+-    result.text = _splice_replacements(text, replacements)
+-    return result
+-
+-
+ def _splice_replacements(
+     text: str, replacements: List[Tuple[int, int, str]]
+ ) -> str:
+@@ -434,11 +187,6 @@
+     return new_text
+ 
+ 
+-# ---------------------------------------------------------------------------
+-# Controlled real-word-ratio mode
+-# ---------------------------------------------------------------------------
+-
+-
+ def _real_word_choices(
+     generator, word: str, word_set: frozenset, n_edits: int
+ ) -> List[Tuple[str, str, float]]:
+@@ -503,8 +251,8 @@
+     word_set: frozenset,
+ ) -> TypoResult:
+     """Inject typos so that ~CONFIG.target_real_fraction of them are real
+-    words. Same word selection/density as the natural mode; shortfalls are
+-    filled with non-words and the actual ratio recorded."""
++    words. The corrupted words are chosen before the quota is applied;
++    shortfalls are filled with non-words and the achieved ratio is recorded."""
+     protected = find_protected_spans(text)
+     ignore_set = getattr(generator, "ignore_set", set())
+ 
+@@ -590,7 +338,7 @@
+ 
+ 
+ # ---------------------------------------------------------------------------
+-# Per-row processing (used by datasets.map, must be top-level / picklable)
++# Per-row processing (used by datasets.map; must be top-level / picklable)
+ # ---------------------------------------------------------------------------
+ 
+ 
+@@ -605,7 +353,7 @@
+     num_real          : int   -> changes that are real English words
+     num_nonword       : int   -> changes that are non-words
+     real_ratio        : float -> P = num_real / num_total (in [0, 1])
+-    target_real_ratio : float -> the variant's target P (NaN in natural mode)
++    target_real_ratio : float -> the variant's target P
+     typo_originals    : list[str]  -> corrupted words, before
+     typo_replacements : list[str]  -> corrupted words, after
+     typo_techniques   : list[str]  -> e.g. "replace" or "delete+insert"
+@@ -622,21 +370,11 @@
+     generator = get_generator()
+     word_set = get_nltk_word_set()
+ 
+-    if CONFIG.target_real_fraction is not None:
+-        result = apply_typos_controlled(
+-            text=example[CONFIG.text_field],
+-            generator=generator,
+-            word_set=word_set,
+-        )
+-    else:
+-        result = apply_typos_to_text(
+-            text=example[CONFIG.text_field],
+-            generator=generator,
+-            word_set=word_set,
+-            typo_rate=CONFIG.typo_rate,
+-            min_word_len=CONFIG.min_word_len,
+-            real_word_retry_attempts=CONFIG.real_word_retry_attempts,
+-        )
++    result = apply_typos_controlled(
++        text=example[CONFIG.text_field],
++        generator=generator,
++        word_set=word_set,
++    )
+ 
+     real_ratio = result.real / result.total if result.total > 0 else float("nan")
+     target = CONFIG.target_real_fraction
+@@ -647,7 +385,7 @@
+         "num_real": result.real,
+         "num_nonword": result.nonword,
+         "real_ratio": real_ratio,
+-        "target_real_ratio": float(target) if target is not None else float("nan"),
++        "target_real_ratio": float(target),
+         "typo_originals": result.originals,
+         "typo_replacements": result.corrupted,
+         "typo_techniques": result.techniques,
+@@ -656,211 +394,13 @@
+     }
+ 
+ 
+-# ---------------------------------------------------------------------------
+-# Data loading
+-# ---------------------------------------------------------------------------
+-
+-
+-def _load_mock_dataset(config: Config):
+-    """Build an in-memory dataset from the built-in mock problems."""
+-    from datasets import Dataset
+-
+-    rows = (_MOCK_PROBLEMS * ((config.subset_size // len(_MOCK_PROBLEMS)) + 1))
+-    rows = rows[: config.subset_size]
+-    return Dataset.from_list(rows)
+-
+-
+-def load_math_subset(config: Config):
+-    """
+-    Load the first ``subset_size`` rows of the configured dataset.
+-
+-    Resolution order:
+-    1. ``config.local_data_path`` (offline: save_to_disk dir, .json or .parquet)
+-    2. the Hugging Face Hub
+-    3. a small built-in mock (only if ``allow_offline_fallback`` and the Hub is
+-       unreachable) so the pipeline can be smoke-tested with no network.
+-    """
+-    from datasets import Dataset, load_dataset, load_from_disk
+-
+-    # 1) Explicit local path.
+-    if config.local_data_path:
+-        path = Path(config.local_data_path)
+-        if not path.exists():
+-            raise FileNotFoundError(f"local_data_path does not exist: {path}")
+-        if path.is_dir():
+-            dataset = load_from_disk(str(path))
+-        elif path.suffix == ".json":
+-            dataset = Dataset.from_json(str(path))
+-        elif path.suffix == ".parquet":
+-            dataset = Dataset.from_parquet(str(path))
+-        else:
+-            raise ValueError(f"Unsupported local_data_path type: {path.suffix}")
+-        n = min(config.subset_size, len(dataset))
+-        return dataset.select(range(n))
+-
+-    # 2) Hugging Face Hub, with 3) offline fallback on failure.
+-    try:
+-        if config.dataset_config_name:
+-            dataset = load_dataset(
+-                config.dataset_name,
+-                config.dataset_config_name,
+-                split=config.dataset_split,
+-            )
+-        else:
+-            dataset = load_dataset(config.dataset_name, split=config.dataset_split)
+-    except Exception as exc:
+-        if not config.allow_offline_fallback:
+-            raise
+-        print(
+-            f"[warn] could not reach the Hub for '{config.dataset_name}' "
+-            f"({exc.__class__.__name__}); falling back to the built-in mock "
+-            f"dataset. Use Config.local_data_path or run on a networked machine "
+-            f"(e.g. the Slurm cluster) for the real data."
+-        )
+-        return _load_mock_dataset(config)
+-
+-    n = min(config.subset_size, len(dataset))
+-    return dataset.select(range(n))
+-
+-
+-# ---------------------------------------------------------------------------
+-# Binning
+-# ---------------------------------------------------------------------------
+-
+-
+-def _bin_labels(groups: int) -> List[str]:
+-    """Human-readable percentage labels, e.g. ['0-25', '25-50', ...]."""
+-    edges = np.linspace(0, 100, groups + 1)
+-    return [f"{int(round(edges[i]))}-{int(round(edges[i + 1]))}" for i in range(groups)]
+-
+-
+-def bin_dataset(dataset, groups: int):
+-    """
+-    Split ``dataset`` into ``groups`` bins by ``real_ratio`` using pandas.cut.
+-
+-    Returns a :class:`datasets.DatasetDict` keyed by percentage-range labels
+-    (e.g. ``"0-25"``). Rows with an undefined ratio (no typos) are dropped
+-    with a warning, since a 0-typo problem cannot belong to the typo dataset.
+-    """
+-    from datasets import Dataset, DatasetDict
+-
+-    df = dataset.to_pandas()
+-
+-    undefined = df["real_ratio"].isna().sum()
+-    if undefined:
+-        print(
+-            f"[warn] dropping {undefined} problem(s) with 0 typos "
+-            f"(cannot be binned / compared to the baseline)."
+-        )
+-        df = df[df["real_ratio"].notna()].reset_index(drop=True)
+-
+-    edges = np.linspace(0.0, 1.0, groups + 1)
+-    labels = _bin_labels(groups)
+-    df["real_bin"] = pd.cut(
+-        df["real_ratio"],
+-        bins=edges,
+-        labels=labels,
+-        include_lowest=True,
+-    )
+-
+-    bins = {}
+-    for label in labels:
+-        sub = df[df["real_bin"] == label].reset_index(drop=True)
+-        if len(sub) == 0:
+-            continue
+-        # ``real_bin`` is categorical; store as plain string for portability.
+-        sub = sub.copy()
+-        sub["real_bin"] = sub["real_bin"].astype(str)
+-        bins[label] = Dataset.from_pandas(sub, preserve_index=False)
+-
+-    return DatasetDict(bins)
+-
+-
+-def save_bins(dataset_dict, out_dir: Path) -> None:
+-    """Persist each bin to its own sub-directory via ``save_to_disk``."""
+-    out_dir.mkdir(parents=True, exist_ok=True)
+-    for label, ds in dataset_dict.items():
+-        target = out_dir / f"bin_{label}"
+-        ds.save_to_disk(str(target))
+-        print(f"[save] bin '{label}': {len(ds):>4d} rows -> {target}")
+-
+-
+-# ---------------------------------------------------------------------------
+-# Reporting helpers (for local inspection)
+-# ---------------------------------------------------------------------------
+-
+-
+-def preview(dataset, config: Config, n: int = 3) -> None:
+-    """Print a few before/after examples and the typo statistics."""
+-    print("\n" + "=" * 78)
+-    print(f"PREVIEW: {min(n, len(dataset))} example problem(s)")
+-    print("=" * 78)
+-    for i in range(min(n, len(dataset))):
+-        row = dataset[i]
+-        print(f"\n--- Problem {i} "
+-              f"(total={row['num_total']}, real={row['num_real']}, "
+-              f"nonword={row['num_nonword']}, P={row['real_ratio']:.3f}) ---")
+-        print("ORIGINAL:", row[config.text_field][:300])
+-        print("TYPO    :", row["problem_typo"][:300])
+-
+-
+-def summarize(dataset) -> None:
+-    """Print aggregate statistics across the processed dataset."""
+-    totals = dataset["num_total"]
+-    reals = dataset["num_real"]
+-    nonwords = dataset["num_nonword"]
+-    print("\n" + "-" * 78)
+-    print("SUMMARY")
+-    print("-" * 78)
+-    print(f"problems processed : {len(dataset)}")
+-    print(f"typos (total)      : {sum(totals)}")
+-    print(f"  real-word typos  : {sum(reals)}")
+-    print(f"  non-word typos   : {sum(nonwords)}")
+-    print(f"min typos / problem: {min(totals)}  (must be >= 1)")
+-
+-
+-# ---------------------------------------------------------------------------
+-# Entry point
+-# ---------------------------------------------------------------------------
+-
+-
+-def main(config: Config = CONFIG) -> None:
+-    global CONFIG
+-    CONFIG = config
+-
+-    config_suffix = f"/{config.dataset_config_name}" if config.dataset_config_name else ""
+-    print(f"[load] {config.dataset_name}{config_suffix} [{config.dataset_split}] "
+-          f"(subset={config.subset_size})")
+-    dataset = load_math_subset(config)
+-
+-    print(f"[typo] generating typos on '{config.text_field}' "
+-          f"(num_proc={config.num_proc}) ...")
+-    map_kwargs = {"num_proc": config.num_proc} if config.num_proc > 1 else {}
+-    processed = dataset.map(
+-        process_row,
+-        with_indices=True,
+-        fn_kwargs={"config": config},
+-        desc="Injecting typos",
+-        **map_kwargs,
+-    )
+-
+-    preview(processed, config)
+-    summarize(processed)
+-
+-    print(f"\n[bin ] splitting into {config.real_token_groups} bins by P ...")
+-    binned = bin_dataset(processed, config.real_token_groups)
+-
+-    print("\n" + "-" * 78)
+-    print("BIN COUNTS")
+-    print("-" * 78)
+-    for label, ds in binned.items():
+-        print(f"bin {label:>7}: {len(ds):>4d} rows")
+-
+-    print(f"[save] writing bins to {config.out_dir}")
+-    save_bins(binned, config.out_dir)
+-
+-    print("\nDone.")
+-
+-
+-if __name__ == "__main__":
+-    main()
++def load_source(config: Config):
++    """First config.subset_size rows of the source dataset from the Hub."""
++    from datasets import load_dataset
++
++    if config.dataset_config_name:
++        dataset = load_dataset(config.dataset_name, config.dataset_config_name,
++                               split=config.dataset_split)
++    else:
++        dataset = load_dataset(config.dataset_name, split=config.dataset_split)
++    return dataset.select(range(min(config.subset_size, len(dataset))))

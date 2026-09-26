@@ -1,0 +1,12 @@
+--- OLD ronshtricker1210/NLP_project@9719fcb:api-setup/api_smoke.py
++++ NEW dolev98/NLP_project@f5d6c41:inference/api_smoke.py
+@@ -1,6 +1,6 @@
+-"""Minimal one-request test to confirm the token + router + model work.
+-API twin of gcp-setup/vllm_smoke.py — costs a fraction of a cent.
+-    source api-setup/env.sh && python api_smoke.py
++"""One request to check the HF token, the router and the model (a fraction of a cent).
++
++    HF_TOKEN=... python inference/api_smoke.py
+ """
+ import os
+ from openai import OpenAI
