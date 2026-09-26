@@ -179,8 +179,9 @@ continue reasoning correctly.
 \subsection{Controlled typo generation}
 
 We generate corrupted versions of each question by modifying only its
-natural-language text, building on the keyboard-aware edit operations of
-MulTypo \citep{zhao2026} and adding control over real-word typos. Numbers, \LaTeX{} expressions, and \LaTeX{} command
+natural-language text, reimplementing the keyboard-aware edit operations of
+MulTypo \citep{zhao2026} without its hand-aware key weighting and adding
+control over real-word typos. Numbers, \LaTeX{} expressions, and \LaTeX{} command
 names are protected and never modified. Candidate words must consist only of
 ASCII letters, and we exclude single-character words and a small set of common
 function words.
