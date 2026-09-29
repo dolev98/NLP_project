@@ -204,9 +204,8 @@ committed `report.pdf` byte for byte.
   A trace with no extractable answer there is *unanswered* and excluded from
   answered-only accuracy; strict accuracy counts it as wrong. GSM8K answers are the
   last `\boxed{}`, else the last number, compared numerically; LaTeX thousands
-  separators (`1,\!210`, `2{,}050`) are read as part of the number, and a fraction,
-  mixed number or repeating decimal (`\frac{11}{3}`, `5\frac{1}{3}`, `13.\overline{3}`)
-  by its value. MATH-500 answers are
+  separators (`1,\!210`, `2{,}050`) are read as part of the number, and a fraction
+  or mixed number (`\frac{11}{3}`, `5\frac{1}{3}`) by its value. MATH-500 answers are
   the last `\boxed{}`, compared by symbolic equivalence with math-verify. ARC answers
   are the boxed letter, else the last explicit answer statement ("The correct answer
   is B)"), else the last bare "option B" or "choice B", else an answer keyword
