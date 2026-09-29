@@ -37,10 +37,11 @@ analysis/        turn generations into tables
   accuracy_flips.py  reasoning_length.py  self_doubt.py  repair_wordlevel.py
   real_word_effect.py  spellcheck_recovery.py  corruption_stats.py
   llm_judge.py           LLM-judge scores (calls an API; run separately)
-  download_data.py       fetch the published generations and judge scores
+  download_data.py       fetch the published datasets, generations and judge scores
   data_manifest.json     pinned Hub revision and sha256 of every data file
   common.py              shared loading, scoring and statistics
-results/<run>/   the analysis tables (CSV) behind the numbers in the report
+results/<run>/   the analysis tables (CSV) behind the numbers in the report, and
+                 gsm8k/figure1_example.json (the worked example of Figure 1)
 report/          the paper: report.tex, report.pdf, custom.bib, figures/ (PNG),
                  and the ACL template files acl.sty and acl_natbib.bst
   make_assets.py         builds generated/ from results/
@@ -70,11 +71,16 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The NLTK word list is downloaded automatically on first use. Inference and the
-judge call the Hugging Face router and need a token with the "Make calls to
-Inference Providers" permission: `export HF_TOKEN=hf_...`. Building the paper needs
-a TeX distribution with `pdflatex` and `bibtex` (it was built with TeX Live 2023);
-the ACL template typesets in Times through the `times` package.
+The NLTK word list (used by `data_creation/` and `analysis/corruption_stats.py`) is
+downloaded automatically on first use. Behind an HTTP proxy, nltk 3.10 refuses that
+download unless `NLTK_ALLOW_PROXIED_URLOPEN=1` is set, and the scripts then stop with
+`Resource 'words' not found`. Inference and the judge call the Hugging Face router
+and need a token with the "Make calls to Inference Providers" permission:
+`export HF_TOKEN=hf_...`. Building the paper needs a TeX distribution with
+`pdflatex` and `bibtex` (it was built with TeX Live 2023; on Ubuntu 24.04 the
+packages `texlive-latex-extra`, `texlive-fonts-recommended` and
+`texlive-fonts-extra` are enough); the ACL template typesets in Times through the
+`times` package.
 
 ## Reproducing the results
 
@@ -90,9 +96,13 @@ python data_creation/generate_variants.py             # 3 datasets x 9 configs -
 python data_creation/generate_variants.py --datasets arc --subset 20   # quick check
 ```
 
-`--push --namespace <hf-user>` publishes them. The published datasets hold all
-1,319 GSM8K and 500 MATH-500 test questions and the first 500 four-option
-ARC-Challenge test questions; the runs use the first 500 of each.
+Each config is saved to `data/typo_variants/<dataset>/<config>`. With the defaults
+they reproduce the published datasets, which hold all 1,319 GSM8K and 500 MATH-500
+test questions and the first 500 four-option ARC-Challenge test questions; the runs
+use the first 500 of each. Step 2 always reads the published datasets (`HUB_REPO` in
+`run_typo_api.py`), not `data/typo_variants/`. `--push --namespace <hf-user>`
+publishes new ones, but as separate repos `<hf-user>/<dataset>-typos` with configs
+`<config>`, not in the layout `run_typo_api.py` reads.
 
 **2. Generations** (sampling at temperature 0.6: a new run gives new samples, not the paper's)
 
@@ -106,15 +116,20 @@ for fix in warn rewrite spellcheck; do
 done
 ```
 
-The generation cap defaults to 20,000 tokens for GSM8K and 17,000 for MATH-500
-and ARC. Interrupted runs resume where they stopped. Add `--limit 5` for a smoke
-test (a few cents).
+The model defaults to `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B:nscale`, which pins
+the Nscale provider (`--model` or `MODEL` overrides it). The generation cap defaults
+to 20,000 tokens for GSM8K and 17,000 for MATH-500 and ARC. Interrupted runs resume
+where they stopped. Use `--limit 5` instead of `--limit 500` for a smoke test (a few
+cents).
 
-**3. Or download the paper's generations and judge scores**
+**3. Or download the paper's typo datasets, generations and judge scores**
 
 ```bash
 python analysis/download_data.py --all       # ~570 MB, checked against data_manifest.json
 ```
+
+`--run <run>`, `--judge` or `--questions` downloads only one run's generations, the
+judge scores or the typo datasets.
 
 **4. Analysis tables**
 
@@ -145,9 +160,10 @@ python report/make_assets.py                 # -> report/generated/
 
 Starting from step 3, steps 4, 5 and 6 regenerate every committed file in `results/`
 and `report/generated/` byte for byte (checked on Linux; on Windows, Python writes the
-tables, `numbers.txt` and `figure1_example.json` with Windows line endings). The
-figure PDFs come out with the same content; their bytes depend on the fonts installed
-(they use Times New Roman when it is available).
+LaTeX tables, `numbers.txt` and `figure1_example.json` with Windows line endings; the
+CSVs have Windows line endings on every platform). The figure PDFs come out with the
+same content; their bytes depend on the fonts installed (they use Times New Roman
+when it is available).
 
 **7. The paper**
 
@@ -162,8 +178,8 @@ stays as it is.
 
 The paper was edited in the team's review document and then set in the ACL
 template, so its tables are typed in and its figures are PNG exports of the
-generated figures (Figure 4 adds value labels). Tables 1–8 hold the values of
-`report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
+generated figures (Figure 4 adds value labels and word counts). Tables 1–8 hold
+the values of `report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
 Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
 0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
 relative loss (n/a), because the ARC non-word coefficient's interval includes 0, so
@@ -186,13 +202,16 @@ committed `report.pdf` byte for byte.
   hand-aware key weighting. A typo is a real word if it is in `nltk.corpus.words`.
 - **Scoring.** Answers are read only from the final section (after `</think>`).
   A trace with no extractable answer there is *unanswered* and excluded from
-  answered-only accuracy; strict accuracy counts it as wrong. ARC answers are the
-  boxed letter, else the last explicit answer statement ("The correct answer is B)"),
-  else the last bare "option B" or "choice B", else an answer keyword followed by a
-  letter in the last 400 characters.
+  answered-only accuracy; strict accuracy counts it as wrong. GSM8K answers are the
+  last `\boxed{}`, else the last number, compared numerically; MATH-500 answers are
+  the last `\boxed{}`, compared by symbolic equivalence with math-verify. ARC answers
+  are the boxed letter, else the last explicit answer statement ("The correct answer
+  is B)"), else the last bare "option B" or "choice B", else an answer keyword
+  followed by a letter in the last 400 characters.
 - **Statistics.** Flips use a continuity-corrected McNemar test on questions
   answered in both conditions; tables also give Holm-corrected p-values over the
-  nine configurations of a run. Confidence intervals for the per-typo logistic fit
+  nine typo configurations of a run (for the paired real-word contrasts, over their
+  nine rate × ρ-pair contrasts). Confidence intervals for the per-typo logistic fit
   come from 1,000 bootstrap resamples of questions.
 - **Word-level repair.** A corrupted word counts as silently fixed, flagged,
   misread or not used depending on which of its two forms the reasoning contains.
@@ -217,9 +236,10 @@ committed `report.pdf` byte for byte.
 - **Runner revisions.** The main-grid runs (GSM8K, MATH-500, ARC) were made with
   earlier revisions of `run_typo_api.py` that did not yet store the `fix`,
   `typo_originals`/`typo_replacements` and spell-check fields, and mostly not
-  `finish_reason`; their prompts and decoding match the current script, and the
-  regenerated rows carry the current fields. The MATH-500 and ARC `cost_usd` values
-  used an older price table and understate the cost about 5x. A comment in
+  `finish_reason`; their prompts and decoding match the current script. The 50 rows
+  regenerated in September 2026 carry the current fields; the 57 ARC rows
+  regenerated in August add only `finish_reason`. The MATH-500 and ARC `cost_usd`
+  values used an older price table and understate the cost about 5x. A comment in
   `run_typo_api.py` records a fixed bug that sent the bare question instead of the
   built prompt; it affected no published row: every stored `prompt` equals the one
   `build_prompt` rebuilds, and every `n_prompt_tokens` equals that prompt's length
