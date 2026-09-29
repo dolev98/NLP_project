@@ -93,10 +93,11 @@ and a fresh judge run cost API credits or time and can be skipped by downloading
 ```bash
 python data_creation/generate_variants.py --clean     # the clean configs
 python data_creation/generate_variants.py             # 3 datasets x 9 configs -> data/typo_variants/
-python data_creation/generate_variants.py --datasets arc --subset 20   # quick check
+python data_creation/generate_variants.py --datasets arc --subset 20 --out data/typo_check   # quick check
 ```
 
-Each config is saved to `data/typo_variants/<dataset>/<config>`. With the defaults
+Each config is saved to `data/typo_variants/<dataset>/<config>` (`--out` changes the
+root, so the quick check does not overwrite the full ARC configs). With the defaults
 they reproduce the published datasets, which hold all 1,319 GSM8K and 500 MATH-500
 test questions and the first 500 four-option ARC-Challenge test questions; the runs
 use the first 500 of each. Step 2 always reads the published datasets (`HUB_REPO` in
@@ -203,9 +204,9 @@ committed `report.pdf` byte for byte.
 - **Scoring.** Answers are read only from the final section (after `</think>`).
   A trace with no extractable answer there is *unanswered* and excluded from
   answered-only accuracy; strict accuracy counts it as wrong. GSM8K answers are the
-  last `\boxed{}`, else the last number, compared numerically; LaTeX thousands
-  separators (`1,\!210`, `2{,}050`) are read as part of the number, and a fraction
-  or mixed number (`\frac{11}{3}`, `5\frac{1}{3}`) by its value. MATH-500 answers are
+  last `\boxed{}`, else the last number, compared numerically; inside the box, LaTeX
+  thousands separators (`1,\!210`, `2{,}050`) are read as part of the number, and a
+  fraction or mixed number (`\frac{11}{3}`, `5\frac{1}{3}`) by its value. MATH-500 answers are
   the last `\boxed{}`, compared by symbolic equivalence with math-verify. ARC answers
   are the boxed letter, else the last explicit answer statement ("The correct answer
   is B)"), else the last bare "option B" or "choice B", else an answer keyword
@@ -233,12 +234,15 @@ committed `report.pdf` byte for byte.
   answer (31 in `clean`, 26 in `typo50_real40`; August 2026) and 50 rows whose final
   answer was cut off (GSM8K `clean` 6, `typo75_real10` 6, `typo75_real70` 28; ARC
   `clean` 6, `typo50_real40` 4; September 2026). `inference/rerun_manifest.json`
-  lists them; every other row is as generated. One regenerated GSM8K row
-  (`typo75_real70`, question 477) ran to the 20,000-token cap.
+  lists them; every other row is as generated. Two regenerated rows ran to the token
+  cap: GSM8K `typo75_real70` question 477 (20,000 tokens) and ARC `clean` question 73
+  (17,000).
 - **Runner revisions.** The main-grid runs (GSM8K, MATH-500, ARC) were made with
   earlier revisions of `run_typo_api.py` that did not yet store the `fix`,
   `typo_originals`/`typo_replacements` and spell-check fields, and mostly not
-  `finish_reason`; their prompts and decoding match the current script. The 50 rows
+  `finish_reason`; their prompts and decoding match the current script. The warn and
+  rewrite runs were made with a later revision that stores `fix` and `finish_reason`
+  but not `typo_originals`/`typo_replacements` or the spell-check fields. The 50 rows
   regenerated in September 2026 carry the current fields; the 57 ARC rows
   regenerated in August add only `finish_reason`. The MATH-500 and ARC `cost_usd`
   values used an older price table and understate the cost about 5x. A comment in

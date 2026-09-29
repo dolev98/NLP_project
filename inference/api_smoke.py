@@ -2,10 +2,13 @@
 
     HF_TOKEN=... python inference/api_smoke.py
 """
-import os
+import os, sys
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ["HF_TOKEN"],
+token = os.environ.get("HF_TOKEN")
+if not token:
+    sys.exit("export HF_TOKEN=hf_... first (fine-grained, 'Make calls to Inference Providers')")
+client = OpenAI(api_key=token,
                 base_url=os.environ.get("API_BASE", "https://router.huggingface.co/v1"))
 resp = client.chat.completions.create(
     model=os.environ.get("MODEL", "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B:nscale"),

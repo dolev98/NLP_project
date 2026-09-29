@@ -22,7 +22,7 @@ from the cache over every answered trace:
     NLP_RUN=gsm8k python analysis/llm_judge.py --all               # judge (needs HF_TOKEN)
     NLP_RUN=gsm8k python analysis/llm_judge.py --all --report-only # tables from the cache
 """
-import os, sys, re, csv, json, random, argparse, threading, hashlib, difflib
+import os, sys, re, json, random, argparse, threading, hashlib, difflib
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
