@@ -68,7 +68,9 @@ def main():
     args = ap.parse_args()
     os.environ["NLP_RUN"] = args.run
     sys.path.insert(0, os.path.join(os.path.dirname(HERE), "analysis"))
-    from common import MAX_NEW_TOKENS, BASE_DATASET, config_files, parse_tag, eval_row
+    from common import (MAX_NEW_TOKENS, BASE_DATASET, DATASETS, config_files, parse_tag,
+                        extract_answer)
+    answer_kind = DATASETS[BASE_DATASET]["kind"]
 
     manifest = {}
     for path in config_files():
@@ -76,7 +78,10 @@ def main():
         kept, removed = [], {"empty": [], "cut": []}
         for line in open(path, encoding="utf-8"):
             r = json.loads(line)
-            kind = dropped(r, eval_row(r)["answered"], MAX_NEW_TOKENS, BASE_DATASET != "arc")
+            # answered exactly as common.eval_row decides it, without scoring correctness,
+            # so this runs without math-verify
+            answered = extract_answer(r.get("final_answer_text", "") or "", answer_kind) is not None
+            kind = dropped(r, answered, MAX_NEW_TOKENS, BASE_DATASET != "arc")
             if kind:
                 removed[kind].append(r["idx"])
             else:
