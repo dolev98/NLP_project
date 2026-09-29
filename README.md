@@ -17,7 +17,7 @@ of GSM8K, MATH-500 and ARC-Challenge, clean plus the 3 × 3 grid. On GSM8K we al
 test three mitigations: a typo warning, rewrite-the-question-first, and an external
 spell checker. We measure accuracy and flips, reasoning length, self-doubt markers,
 how each corrupted word is handled in the reasoning, and LLM-judge scores. The
-submitted paper is [`report/final_submission/acl_latex.pdf`](report/final_submission/acl_latex.pdf).
+paper is [`report/report.pdf`](report/report.pdf).
 
 ## Repository
 
@@ -41,10 +41,11 @@ analysis/        turn generations into tables
   data_manifest.json     pinned Hub revision and sha256 of every data file
   common.py              shared loading, scoring and statistics
 results/<run>/   the analysis tables (CSV) behind every number in the report
-report/          report.tex, make_assets.py, generated figures/ and tables/,
-                 numbers.txt (every number report.tex quotes, with its source)
-  final_submission/  the submitted paper (acl_latex.tex, its PDF, figures, bibliography)
-  versions/      earlier versions of the report and a change-marked copy
+report/          the paper: report.tex, report.pdf, custom.bib, figures/ (PNG),
+                 and the ACL template files acl.sty and acl_natbib.bst
+  make_assets.py         builds generated/ from results/
+  generated/     figure PDFs, tables and numbers.txt (every number the prose
+                 quotes, with its source) made by make_assets.py
 ```
 
 A *run* is one set of generations: `gsm8k`, `math500`, `arc` (main grid) and
@@ -71,10 +72,9 @@ pip install -r requirements.txt
 
 The NLTK word list is downloaded automatically on first use. Inference and the
 judge call the Hugging Face router and need a token with the "Make calls to
-Inference Providers" permission: `export HF_TOKEN=hf_...`. Building the PDFs needs
-a TeX distribution with `pdflatex` and `bibtex` (the submitted paper was built with
-TeX Live 2023, `report.tex` with TeX Live 2026); the ACL template typesets in Times
-through the `times` package.
+Inference Providers" permission: `export HF_TOKEN=hf_...`. Building the paper needs
+a TeX distribution with `pdflatex` and `bibtex` (it was built with TeX Live 2023);
+the ACL template typesets in Times through the `times` package.
 
 ## Reproducing the results
 
@@ -137,34 +137,34 @@ mixing old and new scores is not recommended: for a fresh judge run, pin a
 provider and start an empty cache, e.g.
 `JUDGE_MODEL=meta-llama/Llama-3.3-70B-Instruct:<provider> NLP_RUN=gsm8k python analysis/llm_judge.py --all --cache data/judge/new_gsm8k.jsonl`.
 
-**6. Report**
+**6. Generated tables and figures**
 
 ```bash
-python report/make_assets.py                 # figures/, tables/, numbers.txt
-cd report && pdflatex report && bibtex report && pdflatex report && pdflatex report
+python report/make_assets.py                 # -> report/generated/
 ```
 
 Starting from step 3, steps 4, 5 and 6 regenerate every committed CSV, table and
 `numbers.txt` byte for byte. The figure PDFs come out with the same content; their
 bytes depend on the fonts installed (they use Times New Roman when it is available).
 
-**7. The submitted paper**
+**7. The paper**
 
 ```bash
-cd report/final_submission
-pdflatex acl_latex && bibtex acl_latex && pdflatex acl_latex && pdflatex acl_latex
+cd report && pdflatex report && bibtex report && pdflatex report && pdflatex report
 ```
 
 The paper was edited in the team's review document and then set in the ACL
 template, so its tables are typed in and its figures are PNG exports of the
 generated figures (Figure 4 adds value labels). Its table values are those of
-`report/tables/` except two cells. The ARC `typo25_real10` p-value in Table 4 is
-0.688, the exact value (0.68849974; `make_assets.py` rounds the stored 0.6885 a
-second time and prints 0.689). Table 5 gives no ARC interval for the relative loss
-(n/a), because the ARC non-word coefficient's interval includes 0, so the ratio has
-no finite interval. With TeX Live 2023 and
+`report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
+Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
+0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
+relative loss (n/a), because the ARC non-word coefficient's interval includes 0, so
+the ratio has no finite interval. With TeX Live 2023 and
 `SOURCE_DATE_EPOCH=1790440692 FORCE_SOURCE_DATE=1`, the build reproduces the
-committed `acl_latex.pdf` byte for byte.
+committed `report.pdf` byte for byte except for the document ID in its trailer,
+which pdfTeX derives from the output file name (the PDF was first built under an
+earlier name).
 
 ## Method notes
 
@@ -229,17 +229,9 @@ committed `acl_latex.pdf` byte for byte.
   stores the judge model, prompt version and a hash of the judged trace with every
   row.
 
-## Report versions
-
-`report/final_submission/acl_latex.pdf` is the submitted paper. `report/report.pdf`
-is the earlier version built entirely from the generated tables and figures.
-`report/versions/` keeps the earlier versions and change-marked copies; see
-`report/versions/README.md`.
-
 ## License
 
 The code is MIT (see `LICENSE`). The data we publish are derived from GSM8K (MIT),
 MATH-500 (MIT) and ARC-Challenge (CC BY-SA 4.0) and follow their licenses: the ARC
-typo dataset and the ARC generations are CC BY-SA 4.0. `acl.sty` and
-`acl_natbib.bst` (in `report/` and `report/final_submission/`) are the ACL
-template files and keep their own licenses.
+typo dataset and the ARC generations are CC BY-SA 4.0. `report/acl.sty` and
+`report/acl_natbib.bst` are the ACL template files and keep their own licenses.

@@ -4,7 +4,7 @@ data/
 __pycache__/
 *.pyc
 .venv/
-# LaTeX build files, also under report/final_submission/ (the PDFs are committed)
+# LaTeX build files (report/report.pdf is committed)
 report/**/*.aux
 report/**/*.log
 report/**/*.bbl
