@@ -42,11 +42,11 @@ analysis/        turn generations into tables
   common.py              shared loading, scoring and statistics
 results/<run>/   the analysis tables (CSV) behind the numbers in the report, and
                  gsm8k/figure1_example.json (the worked example of Figure 1)
-report/          the paper: report.tex, report.pdf, custom.bib, figures/ (PNG),
-                 and the ACL template files acl.sty and acl_natbib.bst
+report/          the paper: report.tex, report.pdf, custom.bib and the ACL
+                 template files acl.sty and acl_natbib.bst
   make_assets.py         builds generated/ from results/
-  generated/     figure PDFs, tables and numbers.txt (quoted numbers with their
-                 source files) made by make_assets.py
+  generated/     figure PDFs (the paper's Figures 2-5), tables and numbers.txt
+                 (quoted numbers with their source files) made by make_assets.py
 ```
 
 A *run* is one set of generations: `gsm8k`, `math500`, `arc` (main grid) and
@@ -177,8 +177,8 @@ The PDF is written to `report/build/report.pdf`, so the committed `report/report
 stays as it is.
 
 The paper was edited in the team's review document and then set in the ACL
-template, so its tables are typed in and its figures are PNG exports of the
-generated figures (Figure 4 adds value labels and word counts). Tables 1–8 hold
+template, so its tables are typed in; its figures are the vector PDFs in
+`report/generated/figures/`. Tables 1–8 hold
 the values of `report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
 Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
 0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
@@ -190,7 +190,7 @@ the ratio has no finite interval. Four things in the paper are not made by
 outside the pipeline; the GPQA-Diamond accuracy in the Limitations, from a pilot
 run that is not part of the published data; and the self-doubt marker lists in
 Appendix D, which are the patterns in `analysis/self_doubt.py`. With TeX Live 2023
-and `SOURCE_DATE_EPOCH=1790713041 FORCE_SOURCE_DATE=1`, the build reproduces the
+and `SOURCE_DATE_EPOCH=1790715722 FORCE_SOURCE_DATE=1`, the build reproduces the
 committed `report.pdf` byte for byte.
 
 ## Method notes

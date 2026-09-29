@@ -156,7 +156,7 @@ total corrupted words & 68,739 & 35,685 & 37,248 \\
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig2_accuracy.png}
+\includegraphics[width=\textwidth]{generated/figures/fig_accuracy.pdf}
 \caption{\textbf{The accuracy tax.} \emph{(a)} answered-only accuracy against the typo rate; the line is the mean over the three real-word ratios and the band spans them. \emph{(b)} the same as a change from clean, in percentage points. \emph{(c)} mean generated tokens relative to clean. Accuracy falls with the typo rate on all three datasets and falls fastest on GSM8K, where the text carries the whole problem. On average, reasoning gets longer under typos, so the loss is not the model giving up early.}
 \label{fig:2}
 \end{figure*}
@@ -172,7 +172,7 @@ Typos also lead to longer reasoning traces across all three datasets, while the 
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig3_realword.png}
+\includegraphics[width=\columnwidth]{generated/figures/fig_realword.pdf}
 \caption{\textbf{The real-word effect.} \emph{(a)} multiplicative loss in the odds of a correct answer per additional typo, from a logistic regression fitting real-word and non-word counts separately. \emph{(b)} the controlled paired comparison: the same questions with the same number of typos, changing only the real-word share from $\rho$=10 to $\rho$=70. * marks McNemar p$<$0.05.}
 \label{fig:3}
 \end{figure}
@@ -188,7 +188,7 @@ Overall, real-word typos can be especially difficult for the model. Unlike non-w
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig4_repair.png}
+\includegraphics[width=\textwidth]{generated/figures/fig_repair.pdf}
 \caption{\textbf{Word-level repair behavior.} Each bar is 100\% of the corrupted words in the conditions it pools (n above the bar, in thousands of words). The x-axis sets how many words are corrupted; the segments split those corrupted words by how the reasoning trace handles them. For example, at $r$=25\% on GSM8K, 25\% of the eligible words in each question are corrupted, and 72\% of those corrupted words are silently fixed. \emph{(a)} by typo rate $r$, pooled over real-word ratios. \emph{(b)} by real-word ratio $\rho$, pooled over typo rates. Segments below 9\% are not labeled; per-condition values are in Table~\ref{tab:8}.}
 \label{fig:4}
 \end{figure*}
@@ -245,7 +245,7 @@ The judge's self-doubt score (Table~\ref{tab:2}) rises with the typo rate on all
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig5_doubt.png}
+\includegraphics[width=\textwidth]{generated/figures/fig_doubt.pdf}
 \caption{\textbf{Self-doubt under typos.} Marker density per 1,000 reasoning words across the grid. Uncertainty markers (solid) rise with corruption on all three datasets, most steeply on GSM8K, while second-guessing markers (dashed) stay roughly flat: typos make the model express more doubt without making it verify more. The same densities split by final answer are in Table~\ref{tab:7}.}
 \label{fig:5}
 \end{figure*}
