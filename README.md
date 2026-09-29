@@ -17,7 +17,7 @@ of GSM8K, MATH-500 and ARC-Challenge, clean plus the 3 × 3 grid. On GSM8K we al
 test three mitigations: a typo warning, rewrite-the-question-first, and an external
 spell checker. We measure accuracy and flips, reasoning length, self-doubt markers,
 how each corrupted word is handled in the reasoning, and LLM-judge scores. The
-report is [`report/report.pdf`](report/report.pdf).
+paper is [`report/report.pdf`](report/report.pdf).
 
 ## Repository
 
@@ -40,10 +40,12 @@ analysis/        turn generations into tables
   download_data.py       fetch the published generations and judge scores
   data_manifest.json     pinned Hub revision and sha256 of every data file
   common.py              shared loading, scoring and statistics
-results/<run>/   the analysis tables (CSV) behind every number in the report
-report/          report.tex, make_assets.py, generated figures/ and tables/,
-                 numbers.txt (every number the prose quotes, with its source)
-  versions/      earlier versions of the report and a change-marked copy
+results/<run>/   the analysis tables (CSV) behind the numbers in the report
+report/          the paper: report.tex, report.pdf, custom.bib, figures/ (PNG),
+                 and the ACL template files acl.sty and acl_natbib.bst
+  make_assets.py         builds generated/ from results/
+  generated/     figure PDFs, tables and numbers.txt (quoted numbers with their
+                 source files) made by make_assets.py
 ```
 
 A *run* is one set of generations: `gsm8k`, `math500`, `arc` (main grid) and
@@ -54,7 +56,7 @@ configurations, `clean` and `typo<r>_real<rho>`.
 
 | What | Where |
 |---|---|
-| Typo datasets | [`Dolevabudi/silent-tax-results`](https://huggingface.co/datasets/Dolevabudi/silent-tax-results) (`questions/`; configs `<dataset>_clean`, `<dataset>_rate<r>_real<rho>`) |
+| Typo datasets | [`Dolevabudi/silent-tax-results`](https://huggingface.co/datasets/Dolevabudi/silent-tax-results) (`questions/`; configs `<dataset>_clean`, `<dataset>_rate<r>_real<rho>`; the GSM8K and MATH-500 typo datasets also have ρ = 0, 20, 30, 50, 60 and an older `real<rho>` family, which this study does not use) |
 | Model generations and judge scores | [`Dolevabudi/silent-tax-results`](https://huggingface.co/datasets/Dolevabudi/silent-tax-results) (`raw/<run>/`, `judge/`) |
 
 Everything is public. Downloads go to `data/`, which is not committed.
@@ -70,9 +72,9 @@ pip install -r requirements.txt
 
 The NLTK word list is downloaded automatically on first use. Inference and the
 judge call the Hugging Face router and need a token with the "Make calls to
-Inference Providers" permission: `export HF_TOKEN=hf_...`. Building the PDF needs
-a TeX distribution with `pdflatex` and `bibtex` (tested with TeX Live 2026); the
-ACL template typesets in Times through the `times` package.
+Inference Providers" permission: `export HF_TOKEN=hf_...`. Building the paper needs
+a TeX distribution with `pdflatex` and `bibtex` (it was built with TeX Live 2023);
+the ACL template typesets in Times through the `times` package.
 
 ## Reproducing the results
 
@@ -135,15 +137,46 @@ mixing old and new scores is not recommended: for a fresh judge run, pin a
 provider and start an empty cache, e.g.
 `JUDGE_MODEL=meta-llama/Llama-3.3-70B-Instruct:<provider> NLP_RUN=gsm8k python analysis/llm_judge.py --all --cache data/judge/new_gsm8k.jsonl`.
 
-**6. Report**
+**6. Generated tables and figures**
 
 ```bash
-python report/make_assets.py                 # figures/, tables/, numbers.txt
-cd report && pdflatex report && bibtex report && pdflatex report && pdflatex report
+python report/make_assets.py                 # -> report/generated/
 ```
 
-Starting from step 3, steps 4, 5 and 6 regenerate every committed table, figure
-and number exactly.
+Starting from step 3, steps 4, 5 and 6 regenerate every committed file in `results/`
+and `report/generated/` byte for byte (checked on Linux; on Windows, Python writes the
+tables, `numbers.txt` and `figure1_example.json` with Windows line endings). The
+figure PDFs come out with the same content; their bytes depend on the fonts installed
+(they use Times New Roman when it is available).
+
+**7. The paper**
+
+```bash
+cd report && mkdir -p build
+pdflatex -output-directory build report && bibtex build/report
+pdflatex -output-directory build report && pdflatex -output-directory build report
+```
+
+The PDF is written to `report/build/report.pdf`, so the committed `report/report.pdf`
+stays as it is.
+
+The paper was edited in the team's review document and then set in the ACL
+template, so its tables are typed in and its figures are PNG exports of the
+generated figures (Figure 4 adds value labels). Tables 1–8 hold the values of
+`report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
+Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
+0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
+relative loss (n/a), because the ARC non-word coefficient's interval includes 0, so
+the ratio has no finite interval. Three things in the paper are not made by
+`make_assets.py`: Table 9, the number of responses that reached the token cap
+(`NLP_RUN=<run> python analysis/accuracy_flips.py` prints it per condition as
+`capped%` of 500); the coefficient difference in the Table 5 caption, computed
+outside the pipeline; and the GPQA-Diamond accuracy in the Limitations, from a pilot
+run that is not part of the published data. With TeX Live 2023 and
+`SOURCE_DATE_EPOCH=1790440692 FORCE_SOURCE_DATE=1`, the build reproduces the
+committed `report.pdf` byte for byte except for the document ID in its trailer,
+which pdfTeX derives from the output file name (the PDF was first built under an
+earlier name).
 
 ## Method notes
 
@@ -155,7 +188,9 @@ and number exactly.
 - **Scoring.** Answers are read only from the final section (after `</think>`).
   A trace with no extractable answer there is *unanswered* and excluded from
   answered-only accuracy; strict accuracy counts it as wrong. ARC answers are the
-  boxed letter, else the last explicit answer statement ("The correct answer is B)").
+  boxed letter, else the last explicit answer statement ("The correct answer is B)"),
+  else the last bare "option B" or "choice B", else an answer keyword followed by a
+  letter in the last 400 characters.
 - **Statistics.** Flips use a continuity-corrected McNemar test on questions
   answered in both conditions; tables also give Holm-corrected p-values over the
   nine configurations of a run. Confidence intervals for the per-typo logistic fit
@@ -185,7 +220,11 @@ and number exactly.
   `typo_originals`/`typo_replacements` and spell-check fields, and mostly not
   `finish_reason`; their prompts and decoding match the current script, and the
   regenerated rows carry the current fields. The MATH-500 and ARC `cost_usd` values
-  used an older price table and understate the cost about 5x.
+  used an older price table and understate the cost about 5x. A comment in
+  `run_typo_api.py` records a fixed bug that sent the bare question instead of the
+  built prompt; it affected no published row: every stored `prompt` equals the one
+  `build_prompt` rebuilds, and every `n_prompt_tokens` equals that prompt's length
+  under the model's chat template.
 - **Judge.** Scores were produced in August 2026 with `analysis/llm_judge.py` (prompt
   `v1`, Llama-3.3-70B-Instruct via the Hugging Face router, temperature 0; the
   router's provider was not recorded). The prompt lists the corrupted words from a
@@ -202,12 +241,9 @@ and number exactly.
   stores the judge model, prompt version and a hash of the judged trace with every
   row.
 
-## Report versions
-
-`report/report.pdf` is the submitted report. `report/versions/` keeps the earlier
-versions and a change-marked copy; see `report/versions/README.md`.
-
 ## License
 
-MIT (see `LICENSE`), for the code and for the data we publish. `report/acl.sty`
-and `report/acl_natbib.bst` are the ACL template files and keep their own licenses.
+The code is MIT (see `LICENSE`). The data we publish are derived from GSM8K (MIT),
+MATH-500 (MIT) and ARC-Challenge (CC BY-SA 4.0) and follow their licenses: the ARC
+typo dataset and the ARC generations are CC BY-SA 4.0. `report/acl.sty` and
+`report/acl_natbib.bst` are the ACL template files and keep their own licenses.

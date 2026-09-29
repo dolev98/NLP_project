@@ -12,9 +12,9 @@ import os, re
 # math_verify gives proper symbolic equivalence for MATH500 (1/2 == 0.5 == \frac{1}{2}).
 try:
     from math_verify import parse as mv_parse, verify as mv_verify
-    HAVE_MATH_VERIFY = True
-except Exception:
-    HAVE_MATH_VERIFY = False
+    HAVE_MATH_VERIFY, _MV_IMPORT_ERROR = True, None
+except Exception as e:          # kept so a scoring error can show why the import failed
+    HAVE_MATH_VERIFY, _MV_IMPORT_ERROR = False, e
 
 # math_verify enforces its parsing timeout with a worker process, which cannot be
 # spawned on Windows here; without this the parse silently returns nothing and
@@ -117,12 +117,15 @@ def is_correct(kind, pred, gold):
         return pred.strip().upper() == str(gold).strip().upper()
     if kind == "gsm8k_num":
         return norm_num(pred) is not None and norm_num(pred) == gold
-    # generic math (MATH500) - math_verify needs the LaTeX wrapped in $...$ to parse
-    if HAVE_MATH_VERIFY:
-        try:
-            return bool(mv_verify(mv_parse(f"${gold}$", **_MV_KWARGS),
-                                  mv_parse(f"${pred}$", **_MV_KWARGS),
-                                  **_MV_VERIFY_KWARGS))
-        except Exception:
-            pass
+    # generic math (MATH500) - math_verify needs the LaTeX wrapped in $...$ to parse.
+    # Without the package every answer would silently fall back to numeric matching.
+    if not HAVE_MATH_VERIFY:
+        raise RuntimeError("MATH-500 scoring needs math-verify, which could not be imported "
+                           "(pip install -r requirements.txt)") from _MV_IMPORT_ERROR
+    try:
+        return bool(mv_verify(mv_parse(f"${gold}$", **_MV_KWARGS),
+                              mv_parse(f"${pred}$", **_MV_KWARGS),
+                              **_MV_VERIFY_KWARGS))
+    except Exception:
+        pass
     return norm_num(pred) is not None and norm_num(pred) == norm_num(gold)

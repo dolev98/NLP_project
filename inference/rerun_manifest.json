@@ -1,5 +1,5 @@
 {
- "_about": "Rows regenerated with identical prompts after the router cut the stream (see repair_dropped.py). Keys: run -> config -> question idx.",
+ "_about": "Rows regenerated with identical prompts after the router cut the stream (see repair_dropped.py). Keys: batch -> run -> config -> question idx.",
  "empty_final_2026-08": {
   "arc": {
    "clean": [
