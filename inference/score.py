@@ -8,6 +8,7 @@ math_verify on the last \\boxed{}), or "mc" (ARC letter A-D). The analysis passe
 only the final section (after </think>), so nothing from mid-reasoning is used.
 """
 import os, re
+from fractions import Fraction
 
 # math_verify gives proper symbolic equivalence for MATH500 (1/2 == 0.5 == \frac{1}{2}).
 try:
@@ -45,15 +46,41 @@ def last_boxed(text):
     return "".join(out).strip()
 
 
+# LaTeX number formatting in a boxed answer: thin and negative spaces used as
+# thousands separators (1,\!210, 1\,210) and braced separators (2{,}050).
+_TEX_SPACE = re.compile(r"\\[!,;: ]")
+# The first number of the answer: a fraction \frac{a}{b} (\dfrac, \tfrac) with an
+# optional whole part (5\frac{1}{3} is 5 1/3), a repeating decimal (13.\overline{3}),
+# or a plain number.
+_NUM_TOKEN = re.compile(
+    r"(?P<neg>-)?(?P<whole>\d+)?\s*\\[dt]?frac\{(?P<num>\d+)\}\{(?P<den>\d+)\}"
+    r"|(?P<rint>-?\d+)\.(?P<rdig>\d*)\\overline\{(?P<per>\d+)\}"
+    r"|(?P<plain>-?\d+\.?\d*)")
+
+
 def norm_num(s):
     """Normalize a numeric string for GSM8K comparison."""
     if s is None:
         return None
-    s = s.replace(",", "").replace("$", "").replace("%", "").strip()
-    m = re.search(r"-?\d+\.?\d*", s)
+    s = _TEX_SPACE.sub("", s).replace("{,}", "")
+    s = s.replace(",", "").replace("\\$", "").replace("$", "").replace("\\%", "")
+    s = s.replace("%", "").strip()
+    m = _NUM_TOKEN.search(s)
     if not m:
         return None
-    v = m.group(0)
+    if m.group("plain") is None:
+        if m.group("den") is not None:
+            if int(m.group("den")) == 0:
+                return None
+            v = int(m.group("whole") or 0) + Fraction(int(m.group("num")), int(m.group("den")))
+            v = -v if m.group("neg") else v
+        else:
+            rint, rdig, per = m.group("rint"), m.group("rdig"), m.group("per")
+            v = abs(int(rint)) + Fraction(int(rdig or 0), 10 ** len(rdig))
+            v += Fraction(int(per), 10 ** len(rdig) * (10 ** len(per) - 1))
+            v = -v if rint.startswith("-") else v
+        return str(v.numerator) if v.denominator == 1 else str(float(v))
+    v = m.group("plain")
     try:
         f = float(v)
         return str(int(f)) if f == int(f) else str(f)
