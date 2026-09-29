@@ -40,12 +40,12 @@ analysis/        turn generations into tables
   download_data.py       fetch the published generations and judge scores
   data_manifest.json     pinned Hub revision and sha256 of every data file
   common.py              shared loading, scoring and statistics
-results/<run>/   the analysis tables (CSV) behind every number in the report
+results/<run>/   the analysis tables (CSV) behind the numbers in the report
 report/          the paper: report.tex, report.pdf, custom.bib, figures/ (PNG),
                  and the ACL template files acl.sty and acl_natbib.bst
   make_assets.py         builds generated/ from results/
-  generated/     figure PDFs, tables and numbers.txt (every number the prose
-                 quotes, with its source) made by make_assets.py
+  generated/     figure PDFs, tables and numbers.txt (quoted numbers with their
+                 source files) made by make_assets.py
 ```
 
 A *run* is one set of generations: `gsm8k`, `math500`, `arc` (main grid) and
@@ -143,24 +143,36 @@ provider and start an empty cache, e.g.
 python report/make_assets.py                 # -> report/generated/
 ```
 
-Starting from step 3, steps 4, 5 and 6 regenerate every committed CSV, table and
-`numbers.txt` byte for byte. The figure PDFs come out with the same content; their
-bytes depend on the fonts installed (they use Times New Roman when it is available).
+Starting from step 3, steps 4, 5 and 6 regenerate every committed file in `results/`
+and `report/generated/` byte for byte (checked on Linux; on Windows, Python writes the
+tables, `numbers.txt` and `figure1_example.json` with Windows line endings). The
+figure PDFs come out with the same content; their bytes depend on the fonts installed
+(they use Times New Roman when it is available).
 
 **7. The paper**
 
 ```bash
-cd report && pdflatex report && bibtex report && pdflatex report && pdflatex report
+cd report && mkdir -p build
+pdflatex -output-directory build report && bibtex build/report
+pdflatex -output-directory build report && pdflatex -output-directory build report
 ```
+
+The PDF is written to `report/build/report.pdf`, so the committed `report/report.pdf`
+stays as it is.
 
 The paper was edited in the team's review document and then set in the ACL
 template, so its tables are typed in and its figures are PNG exports of the
-generated figures (Figure 4 adds value labels). Its table values are those of
+generated figures (Figure 4 adds value labels). Tables 1–8 hold the values of
 `report/generated/tables/` except two cells. The ARC `typo25_real10` p-value in
 Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
 0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
 relative loss (n/a), because the ARC non-word coefficient's interval includes 0, so
-the ratio has no finite interval. With TeX Live 2023 and
+the ratio has no finite interval. Three things in the paper are not made by
+`make_assets.py`: Table 9, the number of responses that reached the token cap
+(`NLP_RUN=<run> python analysis/accuracy_flips.py` prints it per condition as
+`capped%` of 500); the coefficient difference in the Table 5 caption, computed
+outside the pipeline; and the GPQA-Diamond accuracy in the Limitations, from a pilot
+run that is not part of the published data. With TeX Live 2023 and
 `SOURCE_DATE_EPOCH=1790440692 FORCE_SOURCE_DATE=1`, the build reproduces the
 committed `report.pdf` byte for byte except for the document ID in its trailer,
 which pdfTeX derives from the output file name (the PDF was first built under an

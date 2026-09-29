@@ -4,7 +4,8 @@ data/
 __pycache__/
 *.pyc
 .venv/
-# LaTeX build files (report/report.pdf is committed)
+# LaTeX build output (report/report.pdf is committed; README step 7 builds into report/build/)
+report/build/
 report/**/*.aux
 report/**/*.log
 report/**/*.bbl
