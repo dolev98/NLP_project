@@ -1,9 +1,9 @@
 """Build every figure, generated table and quoted number of the report.
 
 Reads the analysis tables in results/<run>/ and writes
-  report/figures/*.pdf      figures included by report.tex
-  report/tables/*.tex       tables and the Figure 1 box included by report.tex
-  report/numbers.txt        every number the prose quotes, with its source
+  report/generated/figures/*.pdf   the figures (the paper's PNG figures are exports of these)
+  report/generated/tables/*.tex    the tables and the Figure 1 box (typed into report.tex)
+  report/generated/numbers.txt     every number the prose quotes, with its source
 
 Runs: gsm8k, math500, arc (main grid; 20,000-token cap for GSM8K, 17,000 for the
 others) and gsm8k_warn, gsm8k_rewrite, gsm8k_spellcheck (mitigation arms).
@@ -24,10 +24,11 @@ from matplotlib.ticker import MultipleLocator
 
 HERE = Path(__file__).resolve().parent
 RESULTS = Path(os.environ.get("NLP_RESULTS", HERE.parent / "results"))
-FIGDIR = HERE / "figures"
-TABDIR = HERE / "tables"
-FIGDIR.mkdir(exist_ok=True)
-TABDIR.mkdir(exist_ok=True)
+OUTDIR = HERE / "generated"
+FIGDIR = OUTDIR / "figures"
+TABDIR = OUTDIR / "tables"
+FIGDIR.mkdir(parents=True, exist_ok=True)
+TABDIR.mkdir(parents=True, exist_ok=True)
 
 # --- palette -------------------------------------------------------------
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
@@ -618,7 +619,7 @@ def tab_fixes():
 # Every number quoted in the prose
 # =====================================================================
 def numbers():
-    """report/numbers.txt: one line per number the prose quotes, with its source."""
+    """report/generated/numbers.txt: one line per number the prose quotes, with its source."""
     lines = []
 
     def put(key, value, source):
@@ -757,7 +758,7 @@ def numbers():
         f"{ex['clean_answer']} / {ex['typo_answer']} ({ex['gold']})", "results/gsm8k/figure1_example.json")
     put("figure 1: typos / real-word typos",
         f"{len(ex['typos'])} / {sum(t['real_word'] for t in ex['typos'])}", "results/gsm8k/figure1_example.json")
-    (HERE / "numbers.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (OUTDIR / "numbers.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
@@ -766,4 +767,4 @@ if __name__ == "__main__":
               tab_judge, tab_repair_words, tab_fixes, numbers):
         f()
         print("  ", f.__name__)
-    print("done ->", FIGDIR, TABDIR, HERE / "numbers.txt")
+    print("done ->", FIGDIR, TABDIR, OUTDIR / "numbers.txt")
