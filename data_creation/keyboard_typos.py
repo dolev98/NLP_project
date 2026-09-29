@@ -5,7 +5,7 @@ MulTypo (Zhao et al., 2026; https://github.com/cisnlp/multypo): adjacent-key
 replacement, deletion, insertion of a neighbouring key, and transposition of two
 adjacent letters. It keeps MulTypo's generator interface but none of its code or
 its hand-aware key weighting; neighbours here are the plain QWERTY adjacency
-graph. This module generated the published typo datasets (idoazou/*-typos).
+graph. This module generated the published typo datasets (Dolevabudi/silent-tax-results).
 
 `candidate_distribution` enumerates every word reachable with one edit together
 with its probability under the sampling distribution; typo_pipeline.py uses it

@@ -10,12 +10,13 @@
 Each variant is saved with save_to_disk under <out>/<dataset>/<config> and, with
 --push, becomes config <config> of <namespace>/<dataset>-typos, e.g.
 
-    load_dataset("idoazou/gsm8k-typos", "rate25_real10", split="test")
+    load_dataset("<namespace>/gsm8k-typos", "rate25_real10", split="test")
 
-The published datasets (idoazou/{gsm8k,math500,arc}-typos) were made with the
-defaults below (seed 42, two-edit probability 0.10): all 1,319 GSM8K test
-questions, all 500 MATH-500 questions, and the first 500 four-choice
-ARC-Challenge test questions. See typo_pipeline.py for the algorithm.
+The published datasets (configs <dataset>_<config> of Dolevabudi/silent-tax-results,
+which the inference script loads) were made with the defaults below (seed 42,
+two-edit probability 0.10): all 1,319 GSM8K test questions, all 500 MATH-500
+questions, and the first 500 four-choice ARC-Challenge test questions. See
+typo_pipeline.py for the algorithm.
 """
 
 from __future__ import annotations
