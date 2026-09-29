@@ -300,7 +300,7 @@ The trace analysis points to a related conclusion. The model often notices that 
 
 Typos have a clear and consistent effect on reasoning performance. On GSM8K, accuracy dropped by as much as 27.7 percentage points, with larger declines as the corruption rate increased, and the strongest effect came from typos that turned one valid English word into another. The main problem is not that the model fails to notice corrupted input: it often recognizes that something is wrong, but cannot reliably recover the intended meaning. Its traces show more uncertainty rather than more verification, and neither prompting strategies nor dictionary-based correction consistently improved performance. Robustness to everyday typing errors should therefore be treated as a capability to be developed explicitly, rather than assumed from strong benchmark performance.
 
-All code is available at \url{https://github.com/dolev98/NLP_project}, and the typo datasets, raw generation logs and judge scores are hosted on the Hugging Face Hub (\href{https://huggingface.co/datasets/Dolevabudi/silent-tax-results}{\nolinkurl{Dolevabudi/silent-tax-results}}). All reported results can be reproduced by running \texttt{download\_data.py} followed by \texttt{run\_all.py}.
+All code is available at \url{https://github.com/dolev98/NLP_project}, and the typo datasets, raw generation logs and judge scores are hosted on the Hugging Face Hub (\href{https://huggingface.co/datasets/Dolevabudi/silent-tax-results}{\nolinkurl{Dolevabudi/silent-tax-results}}).
 
 
 \section*{Limitations}
