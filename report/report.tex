@@ -31,7 +31,6 @@
 
 % Tables
 \usepackage{booktabs}
-\usepackage{float}
 
 \title{The Silent Tax: How Typos Reshape Reasoning in Thinking LLMs}
 
@@ -297,7 +296,14 @@ The most consistent finding across our analyses is that real-word typos are more
 The trace analysis points to a related conclusion. The model often notices that the input is unusual: uncertainty language increases, corrupted words are flagged more often, and traces become longer. This additional effort does not reliably lead to recovery, which also explains why the mitigations had little effect: a warning adds information the model often already has, while a forced rewrite commits it early to a single, possibly wrong, interpretation. The main difficulty is therefore not detecting that a typo exists, but recovering the intended word when the corruption is ambiguous. A more promising direction may be to keep multiple interpretations open during reasoning and resolve them later using the structure of the problem. Finally, longer traces should not be read as evidence of successful self-correction: incorrect answers produce longer traces even on clean input.
 
 
-\section{Limitations}
+\section{Conclusion}
+
+Typos have a clear and consistent effect on reasoning performance. On GSM8K, accuracy dropped by as much as 28.1 percentage points, with larger declines as the corruption rate increased, and the strongest effect came from typos that turned one valid English word into another. The main problem is not that the model fails to notice corrupted input: it often recognizes that something is wrong, but cannot reliably recover the intended meaning. Its traces show more uncertainty rather than more verification, and neither prompting strategies nor dictionary-based correction consistently improved performance. Robustness to everyday typing errors should therefore be treated as a capability to be developed explicitly, rather than assumed from strong benchmark performance.
+
+All code is available at \url{https://github.com/dolev98/NLP_project}, and the typo datasets, raw generation logs and judge scores are hosted on the Hugging Face Hub (\href{https://huggingface.co/datasets/Dolevabudi/silent-tax-results}{\nolinkurl{Dolevabudi/silent-tax-results}}). All reported results can be reproduced by running \texttt{download\_data.py} followed by \texttt{run\_all.py}.
+
+
+\section*{Limitations}
 
 \paragraph{One model, one sample.} All headline results come from a single 7B reasoning model at one decoding setting with n=1 sample per question. Our plan called for several samples per question, but the API budget did not permit it, so we cannot separate typo effects from decoding variance at the level of an individual question. The overall effects are much larger than expected sampling noise (McNemar p $<$ 10$^{-6}$ on n=482 paired items), but generalization to larger reasoning models is untested.
 
@@ -306,30 +312,23 @@ The trace analysis points to a related conclusion. The model often notices that 
 \paragraph{Scope of the mitigation study.} We tested the mitigations only on GSM8K, because each required additional paid API calls; we chose GSM8K because it showed the clearest drop under typos, making it the most informative dataset for testing whether a mitigation recovers performance.
 
 
-\section{AI Disclosure and Reflection}
+\section*{AI Disclosure and Reflection}
 
 \paragraph{What we used AI for.} We used GitHub Copilot with Claude primarily to support coding tasks during the project. It helped us build the typo-generation and inference pipelines, write analysis scripts, generate matplotlib code for figures, and improve the wording of some parts of the paper. All methodological and experimental decisions, including the two-axis corruption grid, typo-type weights, answer-extraction rules, and judge rubric, were made by us. The analysis scripts were written with Claude's assistance based on these decisions, and all reported results were generated from the raw generation logs using those scripts.
 
 \paragraph{Reflection.} AI tools were especially useful for speeding up repetitive coding and analysis tasks and for keeping the implementation consistent across experiments. However, generated code and outputs still required careful checking, particularly for numerical results. We therefore verified reported results against the raw data and used a consistent scoring procedure throughout the analysis. Overall, the project highlighted the importance of reproducibility and independent verification when AI tools are used in research.
 
 
-\section{Conclusion}
-
-Typos have a clear and consistent effect on reasoning performance. On GSM8K, accuracy dropped by as much as 28.1 percentage points, with larger declines as the corruption rate increased, and the strongest effect came from typos that turned one valid English word into another. The main problem is not that the model fails to notice corrupted input: it often recognizes that something is wrong, but cannot reliably recover the intended meaning. Its traces show more uncertainty rather than more verification, and neither prompting strategies nor dictionary-based correction consistently improved performance. Robustness to everyday typing errors should therefore be treated as a capability to be developed explicitly, rather than assumed from strong benchmark performance.
-
-All code is available at \url{https://github.com/dolev98/NLP_project}, and the typo datasets, raw generation logs and judge scores are hosted on the Hugging Face Hub (\href{https://huggingface.co/datasets/Dolevabudi/silent-tax-results}{\nolinkurl{Dolevabudi/silent-tax-results}}). All reported results can be reproduced by running \texttt{download\_data.py} followed by \texttt{run\_all.py}.
-
-
 \bibliography{custom}
 
-\clearpage
-\onecolumn
 \appendix
 
 
 \section{Full accuracy grid}
 
-\begin{table}[H]
+Table~\ref{tab:4} gives accuracy, answered questions, mean generated tokens and paired flips against clean for every condition on every dataset.
+
+\begin{table*}[t]
 \centering
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -353,12 +352,14 @@ typo75\_real70 & 64.5 & 482 & 2330 & 148 & 11 & $<$1e-6 & 86.9 & 497 & 3137 & 46
 \end{tabular}}
 \caption{Every condition on every dataset. \emph{acc} is answered-only accuracy (\%), n\_a the number of questions that produced a final answer, \emph{tok} the mean generated tokens. r$\rightarrow$w and w$\rightarrow$r are paired right-to-wrong and wrong-to-right flips against the clean condition over jointly answered questions, with the continuity-corrected McNemar p-value (uncorrected for multiple comparisons).}
 \label{tab:4}
-\end{table}
+\end{table*}
 
 
 \section{Per-typo logistic fit}
 
-\begin{table}[H]
+Table~\ref{tab:5} gives the per-typo logistic fit behind \S\ref{sec:realword}.
+
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{lrrr}
@@ -380,12 +381,14 @@ non-word coefficient, 95\% CI & [-0.0528, -0.0284] & [-0.0792, -0.0398] & [-0.02
 \end{tabular}
 \caption{Per-typo logistic fit behind \S\ref{sec:realword}. One regression per dataset, correct $\sim$ num\_real + num\_nonword, fitted over all answered typo traces pooled across the nine conditions. The predictors are the counts of each kind of typo actually applied to that question. An odds multiplier is exp(coefficient): the factor by which one additional typo of that kind multiplies the odds of a correct answer. $^\dagger$ On ARC the non-word coefficient's CI includes 0, so the ratio has no finite interval; the difference of the two coefficients is $-$0.035 (95\% CI $-$0.057 to $-$0.012, p=0.003).}
 \label{tab:5}
-\end{table}
+\end{table*}
 
 
 \section{Paired real-word contrasts}
 
-\begin{table}[H]
+Table~\ref{tab:6} gives the paired real-word contrasts behind \S\ref{sec:realword}, at every typo rate and every pair of real-word ratios.
+
+\begin{table*}[t]
 \centering
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -408,7 +411,7 @@ non-word coefficient, 95\% CI & [-0.0528, -0.0284] & [-0.0792, -0.0398] & [-0.02
 \end{tabular}}
 \caption{Controlled paired contrast behind \S\ref{sec:realword}, at every typo rate and every pair of real-word ratios. Within a fixed $r$ the same words of the same questions are corrupted in the same positions, so only the \emph{kind} of corruption changes. $\Delta$acc is the accuracy of the higher-$\rho$ variant minus the lower, over questions answered in both; \emph{r/w} is right-to-wrong against wrong-to-right flips; p is a continuity-corrected McNemar test and * marks p$<$0.05 before multiple-comparison correction.}
 \label{tab:6}
-\end{table}
+\end{table*}
 
 
 \section{Reasoning length and self-doubt markers}\label{app:doubt}
@@ -419,7 +422,9 @@ non-word coefficient, 95\% CI & [-0.0528, -0.0284] & [-0.0792, -0.0398] & [-0.02
 
 \paragraph{Second-guessing (10 patterns):} \emph{wait}; \emph{hmm}; \emph{actually}; \emph{reconsider}; \emph{but wait}; \emph{wait, no} (also \emph{actually, no}, \emph{no, wait}); \emph{hold on}; \emph{on second thought}; \emph{let me recheck} (also \emph{let me re-read}, \emph{let me verify}, \emph{let me redo}, \emph{let me double-check}); \emph{double-check} (also \emph{double check}, \emph{double-checking}, \emph{double-checked}).
 
-\begin{table}[H]
+Table~\ref{tab:7} gives reasoning length and marker densities for every condition, overall and split by final answer.
+
+\begin{table*}[t]
 \centering
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -443,12 +448,14 @@ typo75\_real70 & 2330 & 1638 & 3588 & 21.4 & 12.9 & 1.63 & 3137 & 2911 & 4640 & 
 \end{tabular}}
 \caption{Supporting numbers for \S\ref{sec:accuracy} and \S\ref{sec:doubt}. \emph{tok} is mean generated tokens over all answered traces; \emph{tok}\_c and \emph{tok}\_w are the same mean over traces that ended in a correct and in a wrong answer. \emph{uncert.} and \emph{2nd-g.} are uncertainty and second-guessing markers per 1,000 reasoning words, and \emph{u.w/c} is uncertainty density in wrong-answer traces divided by correct-answer traces. Traces generally lengthen with the typo rate (MATH-500 at $\rho$=10 and $\rho$=40 is flat), a wrong answer is preceded by a longer trace than a correct one in every condition, and uncertainty climbs while second-guessing stays roughly flat.}
 \label{tab:7}
-\end{table}
+\end{table*}
 
 
 \section{Word-level repair behaviour}
 
-\begin{table}[H]
+Table~\ref{tab:8} classifies every corrupted word in every condition by how the reasoning trace handles it (\S\ref{sec:repair}).
+
+\begin{table*}[t]
 \centering
 \scriptsize
 \resizebox{\textwidth}{!}{%
@@ -471,12 +478,14 @@ typo75\_real70 & 2330 & 1638 & 3588 & 21.4 & 12.9 & 1.63 & 3137 & 2911 & 4640 & 
 \end{tabular}}
 \caption{Every corrupted word in every condition, classified by how the reasoning trace handles it, as a percentage of the corrupted words in that condition. \emph{silent} / \emph{flag} / \emph{mis.} / \emph{unused} are the four categories of \S\ref{sec:repair}. \emph{mis}\_c and \emph{mis}\_w are the misread rate among questions the model answered correctly and among those it answered wrongly, which is the comparison behind the claim that misreading is associated with failure. Figure~\ref{fig:4} shows the same data pooled along each axis. Words whose corrupted form also appears in the model's trace on the clean question (about 3\% overall) are left out.}
 \label{tab:8}
-\end{table}
+\end{table*}
 
 
 \section{Responses that reach the token limit}\label{app:tokenlimit}
 
-\begin{table}[H]
+Table~\ref{tab:9} counts the responses that reach the generation cap in each condition.
+
+\begin{table*}[t]
 \centering
 \small
 \begin{tabular}{lrrr}
@@ -499,6 +508,6 @@ typo75\_real70 & 17 & 3 & 10 \\
 \end{tabular}
 \caption{Responses that reach the generation cap (20,000 tokens for GSM8K, 17,000 for MATH-500 and ARC-Challenge), out of 500 questions per condition; the last row is out of 5,000. None of them contains a final answer, so all are counted as unanswered. At most 17 of 500 (3.4\%) reach the cap in any condition. The remaining unanswered responses in Table~\ref{tab:4} stopped before the cap without an extractable answer.}
 \label{tab:9}
-\end{table}
+\end{table*}
 
 \end{document}
