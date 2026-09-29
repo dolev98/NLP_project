@@ -1,7 +1,7 @@
 """Build every figure, generated table and quoted number of the report.
 
 Reads the analysis tables in results/<run>/ and writes
-  report/generated/figures/*.pdf   the figures (the paper's PNG figures are exports of these)
+  report/generated/figures/*.pdf   the figures (report.tex includes these)
   report/generated/tables/*.tex    the tables and the Figure 1 box (typed into report.tex)
   report/generated/numbers.txt     every number the prose quotes, with its source
 
@@ -238,13 +238,15 @@ def repair_shares(per, configs):
 
 def fig_repair():
     """How every corrupted word is handled, against the typo rate and the
-    real-word ratio (Section 5.3). Pooled from word counts."""
-    fig, axes = plt.subplots(2, 3, figsize=(7.1, 2.92), sharey=True)
+    real-word ratio (Section 5.3). Pooled from word counts. Segments of at
+    least 9% carry their rounded share and every bar its word count, as the
+    Figure 4 caption says."""
+    fig, axes = plt.subplots(2, 3, figsize=(7.1, 3.52), sharey=True)
     for col_i, (ds, label, _) in enumerate(DATASETS):
         per = load(ds, "repair_wordlevel_per_config").set_index("config")
-        groups = [("typo rate", [f"{r}%" for r in RATES],
+        groups = [(r"typo rate $r$", [f"{r}%" for r in RATES],
                    [[f"typo{r}_real{p}" for p in RHOS] for r in RATES]),
-                  ("real-word typos", [f"{p}%" for p in RHOS],
+                  (r"real-word ratio $\rho$", [f"{p}%" for p in RHOS],
                    [[f"typo{r}_real{p}" for r in RATES] for p in RHOS])]
         for row_i, (xlabel, ticks, grouping) in enumerate(groups):
             ax = axes[row_i][col_i]
@@ -254,7 +256,15 @@ def fig_repair():
                 heights = [v[k] for v in vals]
                 ax.bar(range(len(grouping)), heights, 0.6, bottom=bottom, color=color,
                        label=name, edgecolor="white", linewidth=1.0)
+                for x, (b0, h) in enumerate(zip(bottom, heights)):
+                    if h >= 9:
+                        ax.text(x, b0 + h / 2, f"{h:.0f}", ha="center", va="center",
+                                fontsize=6.8, color="white" if color == BLUE else INK)
                 bottom = [bb + h for bb, h in zip(bottom, heights)]
+            for x, g in enumerate(grouping):
+                n = per.loc[g, "n_corrupt_words"].sum()
+                ax.text(x, 102, f"n={n / 1000:.1f}k", ha="center", va="bottom",
+                        fontsize=6.5, color=INK2)
             ax.set_xticks(range(len(grouping)))
             ax.set_xticklabels(ticks)
             ax.set_xlabel(xlabel)
@@ -262,13 +272,13 @@ def fig_repair():
             ax.yaxis.set_major_locator(MultipleLocator(25))
             style(ax, ygrid=False)
             if row_i == 0:
-                ax.set_title(label, loc="center", color=INK2, pad=4)
-    for row_i, tag in enumerate(("(a) by typo rate", "(b) by real-word ratio")):
-        axes[row_i][0].set_ylabel("share of words (%)", fontsize=7.5)
-        axes[row_i][0].set_title(tag, loc="left", fontsize=7.5, color=INK2, pad=4)
+                ax.set_title(label, loc="center", color=INK2, pad=13)
+    for row_i, tag in enumerate((r"(a) by typo rate $r$", r"(b) by real-word ratio $\rho$")):
+        axes[row_i][0].set_ylabel("% of corrupted words", fontsize=7.5)
+        axes[row_i][0].set_title(tag, loc="left", fontsize=7.5, color=INK2, pad=13)
     handles, lbls = axes[0][0].get_legend_handles_labels()
     fig.legend(handles, lbls, frameon=False, ncol=4, loc="upper center",
-               bbox_to_anchor=(0.5, 1.055), handlelength=1.1, columnspacing=1.6)
+               bbox_to_anchor=(0.5, 1.045), handlelength=1.1, columnspacing=1.6)
     fig.tight_layout(w_pad=1.0, h_pad=0.9, rect=(0, 0, 1, 0.955))
     fig.savefig(FIGDIR / "fig_repair.pdf", metadata={"CreationDate": None})
     plt.close(fig)
