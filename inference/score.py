@@ -117,12 +117,14 @@ def is_correct(kind, pred, gold):
         return pred.strip().upper() == str(gold).strip().upper()
     if kind == "gsm8k_num":
         return norm_num(pred) is not None and norm_num(pred) == gold
-    # generic math (MATH500) - math_verify needs the LaTeX wrapped in $...$ to parse
-    if HAVE_MATH_VERIFY:
-        try:
-            return bool(mv_verify(mv_parse(f"${gold}$", **_MV_KWARGS),
-                                  mv_parse(f"${pred}$", **_MV_KWARGS),
-                                  **_MV_VERIFY_KWARGS))
-        except Exception:
-            pass
+    # generic math (MATH500) - math_verify needs the LaTeX wrapped in $...$ to parse.
+    # Without the package every answer would silently fall back to numeric matching.
+    if not HAVE_MATH_VERIFY:
+        raise RuntimeError("MATH-500 scoring needs math-verify: pip install -r requirements.txt")
+    try:
+        return bool(mv_verify(mv_parse(f"${gold}$", **_MV_KWARGS),
+                              mv_parse(f"${pred}$", **_MV_KWARGS),
+                              **_MV_VERIFY_KWARGS))
+    except Exception:
+        pass
     return norm_num(pred) is not None and norm_num(pred) == norm_num(gold)
