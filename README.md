@@ -190,7 +190,7 @@ the ratio has no finite interval. Four things in the paper are not made by
 outside the pipeline; the GPQA-Diamond accuracy in the Limitations, from a pilot
 run that is not part of the published data; and the self-doubt marker lists in
 Appendix D, which are the patterns in `analysis/self_doubt.py`. With TeX Live 2023
-and `SOURCE_DATE_EPOCH=1790709265 FORCE_SOURCE_DATE=1`, the build reproduces the
+and `SOURCE_DATE_EPOCH=1790713041 FORCE_SOURCE_DATE=1`, the build reproduces the
 committed `report.pdf` byte for byte.
 
 ## Method notes
