@@ -167,16 +167,15 @@ generated figures (Figure 4 adds value labels). Tables 1–8 hold the values of
 Table 4 is 0.688, the exact value (0.68849974; `make_assets.py` rounds the stored
 0.6885 a second time and prints 0.689). Table 5 gives no ARC interval for the
 relative loss (n/a), because the ARC non-word coefficient's interval includes 0, so
-the ratio has no finite interval. Three things in the paper are not made by
+the ratio has no finite interval. Four things in the paper are not made by
 `make_assets.py`: Table 9, the number of responses that reached the token cap
 (`NLP_RUN=<run> python analysis/accuracy_flips.py` prints it per condition as
 `capped%` of 500); the coefficient difference in the Table 5 caption, computed
-outside the pipeline; and the GPQA-Diamond accuracy in the Limitations, from a pilot
-run that is not part of the published data. With TeX Live 2023 and
-`SOURCE_DATE_EPOCH=1790440692 FORCE_SOURCE_DATE=1`, the build reproduces the
-committed `report.pdf` byte for byte except for the document ID in its trailer,
-which pdfTeX derives from the output file name (the PDF was first built under an
-earlier name).
+outside the pipeline; the GPQA-Diamond accuracy in the Limitations, from a pilot
+run that is not part of the published data; and the self-doubt marker lists in
+Appendix D, which are the patterns in `analysis/self_doubt.py`. With TeX Live 2023
+and `SOURCE_DATE_EPOCH=1790709265 FORCE_SOURCE_DATE=1`, the build reproduces the
+committed `report.pdf` byte for byte.
 
 ## Method notes
 
