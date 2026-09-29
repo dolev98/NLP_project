@@ -56,7 +56,7 @@ configurations, `clean` and `typo<r>_real<rho>`.
 
 | What | Where |
 |---|---|
-| Typo datasets | [`idoazou/gsm8k-typos`](https://huggingface.co/datasets/idoazou/gsm8k-typos), [`idoazou/math500-typos`](https://huggingface.co/datasets/idoazou/math500-typos), [`idoazou/arc-typos`](https://huggingface.co/datasets/idoazou/arc-typos) (configs `clean`, `rate<r>_real<rho>`; the GSM8K and MATH-500 repos also hold ρ = 0, 20, 30, 50, 60 and an older `real<rho>` family, which this study does not use) |
+| Typo datasets | [`Dolevabudi/silent-tax-results`](https://huggingface.co/datasets/Dolevabudi/silent-tax-results) (`questions/`; configs `<dataset>_clean`, `<dataset>_rate<r>_real<rho>`; the GSM8K and MATH-500 typo datasets also have ρ = 0, 20, 30, 50, 60 and an older `real<rho>` family, which this study does not use) |
 | Model generations and judge scores | [`Dolevabudi/silent-tax-results`](https://huggingface.co/datasets/Dolevabudi/silent-tax-results) (`raw/<run>/`, `judge/`) |
 
 Everything is public. Downloads go to `data/`, which is not committed.
@@ -113,7 +113,7 @@ test (a few cents).
 **3. Or download the paper's generations and judge scores**
 
 ```bash
-python analysis/download_data.py --all       # ~510 MB, checked against data_manifest.json
+python analysis/download_data.py --all       # ~570 MB, checked against data_manifest.json
 ```
 
 **4. Analysis tables**

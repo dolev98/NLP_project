@@ -1,17 +1,19 @@
-"""Download the paper's raw generations and judge scores from the Hub.
+"""Download the paper's typo datasets, raw generations and judge scores from the Hub.
 
 Everything lives in the public dataset repo Dolevabudi/silent-tax-results, laid
 out exactly like the local data/ folder:
 
-    raw/<run>/<run>_<config>.jsonl      one model generation per question
-    judge/<run>_judge_traces.jsonl      LLM-judge scores per trace
+    questions/<dataset>/<config>.parquet  the typo datasets (also loadable as configs)
+    raw/<run>/<run>_<config>.jsonl        one model generation per question
+    judge/<run>_judge_traces.jsonl        LLM-judge scores per trace
 
 analysis/data_manifest.json pins the repo revision and the sha256 of every file,
 so the download is checked against the exact data the tables were built from.
 
     python analysis/download_data.py --run gsm8k     # one run's generations
-    python analysis/download_data.py --all           # every run + judge scores
+    python analysis/download_data.py --all           # everything
     python analysis/download_data.py --judge         # judge scores only
+    python analysis/download_data.py --questions     # typo datasets only
 """
 import os, json, shutil, hashlib, argparse
 
@@ -48,8 +50,9 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--run", help="gsm8k | math500 | arc | gsm8k_warn | gsm8k_rewrite | gsm8k_spellcheck")
-    g.add_argument("--all", action="store_true", help="every run and the judge scores")
+    g.add_argument("--all", action="store_true", help="every file: typo datasets, runs, judge scores")
     g.add_argument("--judge", action="store_true", help="the judge scores only")
+    g.add_argument("--questions", action="store_true", help="the typo datasets only")
     args = ap.parse_args()
 
     manifest = json.load(open(MANIFEST, encoding="utf-8"))
@@ -58,6 +61,8 @@ def main():
         paths = [p for p in paths if p.startswith(f"raw/{args.run}/")]
     elif args.judge:
         paths = [p for p in paths if p.startswith("judge/")]
+    elif args.questions:
+        paths = [p for p in paths if p.startswith("questions/")]
     if not paths:
         raise SystemExit(f"nothing in the manifest for {args.run!r}")
     for p in paths:

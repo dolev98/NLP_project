@@ -34,10 +34,13 @@ API_BASE = os.environ.get("API_BASE", "https://router.huggingface.co/v1")
 # used only for the cost_usd estimate stored in each record.
 PRICE_IN, PRICE_OUT = 0.15, 0.15
 
+# The typo datasets are configs "<dataset>_<config>" (e.g. gsm8k_rate25_real10) of the
+# paper's data repo.
+HUB_REPO = "Dolevabudi/silent-tax-results"
 DATASETS = {
-    "gsm8k":   {"repo": "idoazou/gsm8k-typos",   "clean": "question", "typo": "problem_typo", "gold": "answer",         "kind": "math"},
-    "math500": {"repo": "idoazou/math500-typos", "clean": "problem",  "typo": "problem_typo", "gold": "answer",         "kind": "math"},
-    "arc":     {"repo": "idoazou/arc-typos",     "clean": "Question", "typo": "problem_typo", "gold": "Correct Answer", "kind": "mc"},
+    "gsm8k":   {"repo": HUB_REPO, "clean": "question", "typo": "problem_typo", "gold": "answer",         "kind": "math"},
+    "math500": {"repo": HUB_REPO, "clean": "problem",  "typo": "problem_typo", "gold": "answer",         "kind": "math"},
+    "arc":     {"repo": HUB_REPO, "clean": "Question", "typo": "problem_typo", "gold": "Correct Answer", "kind": "mc"},
 }
 # Generation cap used in the paper for each dataset (tokens).
 MAX_NEW_TOKENS = {"gsm8k": 20000, "math500": 17000, "arc": 17000}
@@ -46,7 +49,7 @@ META_COLS = ["target_real_ratio", "real_ratio", "num_total", "num_real", "num_no
              "level", "subject", "unique_id", "Record ID"]
 
 # The study design: typo rate r in {25,50,75}% x real-word ratio rho in {10,40,70}%.
-# Other configs on the GSM8K and MATH-500 Hub repos (rho 0/20/30/50/60 and the older
+# Other GSM8K and MATH-500 configs in the data repo (rho 0/20/30/50/60 and the older
 # fixed-rate `realY` family) are not part of the study and are rejected.
 STUDY_RATES, STUDY_REALS = (25, 50, 75), (10, 40, 70)
 DEFAULT_CONFIGS = [f"rate{r}_real{p}" for r in STUDY_RATES for p in STUDY_REALS]
@@ -356,7 +359,7 @@ def ask_one(client, args, prompt, retries):
 def run_one(client, dataset, spec, config, variant, args, totals, checker=None):
     """Generate for a single (dataset, config, variant) and write one JSONL file."""
     run = f"{dataset}_{args.fix}" if args.fix else dataset
-    ds = load_dataset(spec["repo"], config, split="test")
+    ds = load_dataset(spec["repo"], f"{dataset}_{config}", split="test")
     use_typo = (variant == "typo")
     if use_typo and spec["typo"] not in ds.column_names:
         print(f"  [skip] {dataset}/{config}: no '{spec['typo']}' column (clean-only config)", flush=True)
@@ -502,7 +505,7 @@ def main():
         if want_clean:
             # one clean baseline: prefer the dedicated 'clean' config, else clean column of the first config
             all_cfgs = sorted(get_dataset_config_names(spec["repo"]))
-            base_cfg = "clean" if "clean" in all_cfgs else configs[0]
+            base_cfg = "clean" if f"{dname}_clean" in all_cfgs else configs[0]
             run_one(client, dname, spec, base_cfg, "clean", args, totals, checker=checker)
         if want_typo:
             for config in configs:

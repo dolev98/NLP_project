@@ -1,6 +1,6 @@
 {
  "repo": "Dolevabudi/silent-tax-results",
- "revision": "b64e5b2cc8c1ac713a0b3d4f0457c3101bf852aa",
+ "revision": "2064e1a8483bacca2f7de4457f7da2316b1e657a",
  "files": {
   "judge/arc_judge_traces.jsonl": {
    "sha256": "b130f9e595430b21c06fe32d464f6289b04de844e78fa6796b75fa2ee98fbb96",
@@ -13,6 +13,310 @@
   "judge/math500_judge_traces.jsonl": {
    "sha256": "76e853de02de4e30bf050608e80c6d1fea1772c296768e5ceadf3a5fd75dcf8b",
    "bytes": 2853968
+  },
+  "questions/arc/clean.parquet": {
+   "sha256": "699736eb0c4cbf2b3230caa993ead4503fb61acbf2bd263246a16e82a56bf9f4",
+   "bytes": 97021
+  },
+  "questions/arc/rate25_real10.parquet": {
+   "sha256": "c85506c31d32809ddc9df4cb65971185ff49e29da0899299555baaba8b2d928e",
+   "bytes": 233607
+  },
+  "questions/arc/rate25_real40.parquet": {
+   "sha256": "d21b1f627210e2da46d8b9ac391492cd091a8ef41da17cea02f1075a97bd61b4",
+   "bytes": 232402
+  },
+  "questions/arc/rate25_real70.parquet": {
+   "sha256": "9989096038b95ac6b74874293a99810bf87968c72727a258187adc2024d2497b",
+   "bytes": 230660
+  },
+  "questions/arc/rate50_real10.parquet": {
+   "sha256": "d45145938a3c73f9698c7af0e4f49829d04670b892ba0cf7622d4742536c342c",
+   "bytes": 322533
+  },
+  "questions/arc/rate50_real40.parquet": {
+   "sha256": "b6586240eaf48731ca29d0b1e36cfef7adb401bba6f1d108a09cc78eeb3f298e",
+   "bytes": 319151
+  },
+  "questions/arc/rate50_real70.parquet": {
+   "sha256": "1f8d80dc76d690e11927df85dca9592e6361b722821b753a9fbf3bba751b5b53",
+   "bytes": 315171
+  },
+  "questions/arc/rate75_real10.parquet": {
+   "sha256": "ba120d820788d9b00ea6369cfa02eb4fa9f39e4d167f6396697dfc13546ded42",
+   "bytes": 408616
+  },
+  "questions/arc/rate75_real40.parquet": {
+   "sha256": "ce6891c97c09cecb6ac0a137a0806be7ad489ee90980cb360bd5525ae34c1e8a",
+   "bytes": 404320
+  },
+  "questions/arc/rate75_real70.parquet": {
+   "sha256": "ec1456e9103203c58f420895c570564b23c056b4ae77d323443f37c578aac591",
+   "bytes": 398798
+  },
+  "questions/gsm8k/clean.parquet": {
+   "sha256": "75f86c52964ab8dd2a588625298b390e5df78b13c274e612715cb784548d31d2",
+   "bytes": 409116
+  },
+  "questions/gsm8k/rate25_real0.parquet": {
+   "sha256": "d5eabe54fbe2e4e7ead555cfba3126a0f691dde614372c4c7277d8eb56c7fd6a",
+   "bytes": 1022914
+  },
+  "questions/gsm8k/rate25_real10.parquet": {
+   "sha256": "64102fc7605583072175ad3e1917b2c39918b11c071c8cba084f845d9bf661bf",
+   "bytes": 1021840
+  },
+  "questions/gsm8k/rate25_real20.parquet": {
+   "sha256": "fdafbe28addd7e2480b67407044741974242c06a52dabd1dc41debd377a6d708",
+   "bytes": 1019619
+  },
+  "questions/gsm8k/rate25_real30.parquet": {
+   "sha256": "3243b6eaf054f1d8a4a997e616d23369c3a567d070a79712c1df69ac62ef4d6b",
+   "bytes": 1017503
+  },
+  "questions/gsm8k/rate25_real40.parquet": {
+   "sha256": "f260683413f3be9012c4610050f3dfe3cf6215adcbd86325e134099c7cc3f39e",
+   "bytes": 1014650
+  },
+  "questions/gsm8k/rate25_real50.parquet": {
+   "sha256": "f2ffa8b4d7dc8e1f9674f41150940eef403c5ecee890242a4e6999fd66794229",
+   "bytes": 1011484
+  },
+  "questions/gsm8k/rate25_real60.parquet": {
+   "sha256": "2d2f4fc255e4a3ea668d508c9fa73bcf5e3e9f1eb34df4fc3fb276894c542622",
+   "bytes": 1008229
+  },
+  "questions/gsm8k/rate25_real70.parquet": {
+   "sha256": "4693a524c3e1d3cf6ed89c4c5c7b308f4f005042b9e81981c804dd0ed3e5b89d",
+   "bytes": 1005485
+  },
+  "questions/gsm8k/rate50_real0.parquet": {
+   "sha256": "c0bd884a3fb7fd33fe25fd90651b6f882a789df8e28e4a2cabb3df8a05a04206",
+   "bytes": 1441121
+  },
+  "questions/gsm8k/rate50_real10.parquet": {
+   "sha256": "12fa3894317b063374154a7e82e6181dc47402d253dce064a308783a6cec8ee5",
+   "bytes": 1437888
+  },
+  "questions/gsm8k/rate50_real20.parquet": {
+   "sha256": "2691e3af6e442477dba389b7768793dee140f5a0850cce9858465616c561f116",
+   "bytes": 1433853
+  },
+  "questions/gsm8k/rate50_real30.parquet": {
+   "sha256": "bb3e7c257cdba0c46357e10eded3ad671b2ed83ae115dc0bf852776c249147d1",
+   "bytes": 1428119
+  },
+  "questions/gsm8k/rate50_real40.parquet": {
+   "sha256": "58270c860659af72a39fa76eded5e911a9b4582a9731791aedbcdf7b3ed01a53",
+   "bytes": 1422911
+  },
+  "questions/gsm8k/rate50_real50.parquet": {
+   "sha256": "d56fc3f343019ef284a1a5e8d0ca2b9c21fea5bdee7621f73b6444d4baec3fc6",
+   "bytes": 1416335
+  },
+  "questions/gsm8k/rate50_real60.parquet": {
+   "sha256": "c6db1bef4437d8cdf71917c9ad476ace133110392f3a2e167486e7af3f4e2d73",
+   "bytes": 1412291
+  },
+  "questions/gsm8k/rate50_real70.parquet": {
+   "sha256": "f624c24378a972708b6c4458f770613139593a353942861492d20a691e9248ad",
+   "bytes": 1405670
+  },
+  "questions/gsm8k/rate75_real0.parquet": {
+   "sha256": "c13304707f512c3434b1196b3773fcef8920cd3f02ccbc446f06a204db6dac09",
+   "bytes": 1849682
+  },
+  "questions/gsm8k/rate75_real10.parquet": {
+   "sha256": "a7ee4566cee64fc9640a24c9686c7870813e0585f610e62ae791e390565fd793",
+   "bytes": 1845782
+  },
+  "questions/gsm8k/rate75_real20.parquet": {
+   "sha256": "369fc783838d12b121bb92c7cac0285f062d04739a394265cd93b3eb52d39800",
+   "bytes": 1838612
+  },
+  "questions/gsm8k/rate75_real30.parquet": {
+   "sha256": "b047fe8cf97c5651cd2b04a64407e832212edd81d16c0fc726b85d4bb1c50166",
+   "bytes": 1830940
+  },
+  "questions/gsm8k/rate75_real40.parquet": {
+   "sha256": "8a525f32c63eb400077cafdb937aee686628dc0692605572637552c7ed8870a1",
+   "bytes": 1822586
+  },
+  "questions/gsm8k/rate75_real50.parquet": {
+   "sha256": "8ac51e1e1b3d93cb00df39937ac4c4a5b8732e34bf21b9b6ef3a29ed8261bd63",
+   "bytes": 1814791
+  },
+  "questions/gsm8k/rate75_real60.parquet": {
+   "sha256": "8e72993b32614ad773bccdb24aae2b478d24a612a452d980965c9b9fd854c2f3",
+   "bytes": 1806185
+  },
+  "questions/gsm8k/rate75_real70.parquet": {
+   "sha256": "097312c0548339fa37f5a320da73a1c5a1689db6f8fd4023401fb5e7831e69f1",
+   "bytes": 1797566
+  },
+  "questions/gsm8k/real0.parquet": {
+   "sha256": "f5c3ee1d88434245ec679f39177c03344fc6372a97a7123974e5f5fb55a36f66",
+   "bytes": 1105872
+  },
+  "questions/gsm8k/real10.parquet": {
+   "sha256": "ce2adf04914b3fc61a5998885bbe65dd6732a04edc148d4d31cf8e028ae423e7",
+   "bytes": 1105398
+  },
+  "questions/gsm8k/real20.parquet": {
+   "sha256": "15bf690f697d9b22990ac7b8f32114e9e4efed00907e93faf741741728b9c202",
+   "bytes": 1102271
+  },
+  "questions/gsm8k/real30.parquet": {
+   "sha256": "3ed95dedd520d7d73e2b2f51a341d9fd1975e9c833c829fb6fcdd2102caf99af",
+   "bytes": 1099743
+  },
+  "questions/gsm8k/real40.parquet": {
+   "sha256": "50a83cbf6c8e1334f08e577a2b0408a2ca8408e43be61652a8a31074de42373b",
+   "bytes": 1096724
+  },
+  "questions/gsm8k/real50.parquet": {
+   "sha256": "7e7695a450521e28423214bd69405c70da3942e5fbfcaf90cfdbd220c1a186e1",
+   "bytes": 1093070
+  },
+  "questions/gsm8k/real60.parquet": {
+   "sha256": "49b626ffd3eb119e82349ef95b2c20bcd3fa99983b2be1f3d51c354351e37ba7",
+   "bytes": 1089297
+  },
+  "questions/gsm8k/real70.parquet": {
+   "sha256": "33d343ba240135c7b3813103fb3382ee58c44dbdcac70939e78ddc1ef5cb6afa",
+   "bytes": 1086693
+  },
+  "questions/math500/clean.parquet": {
+   "sha256": "109bbcdcbfc2bc0b1f01c1c567784e792c3f5921e120591b15bec56840e77313",
+   "bytes": 208262
+  },
+  "questions/math500/rate25_real0.parquet": {
+   "sha256": "ba52946226b04e0963f0e6851af7444e08e933c8d3afd823693771e6e47dc27d",
+   "bytes": 358085
+  },
+  "questions/math500/rate25_real10.parquet": {
+   "sha256": "d98425bbbcacdd3af85a09e2de5054cb2019e46a32397c7220dbb22a79fc1534",
+   "bytes": 357901
+  },
+  "questions/math500/rate25_real20.parquet": {
+   "sha256": "673d2fa5a9f20e044ff48e3bbb536fc745839f6b7b9085274afbac778ed5032c",
+   "bytes": 357860
+  },
+  "questions/math500/rate25_real30.parquet": {
+   "sha256": "f0e409582074704a1aa831bea4daa5d3d95c262f3ecb1c2ba04e78f0c658cd7c",
+   "bytes": 357799
+  },
+  "questions/math500/rate25_real40.parquet": {
+   "sha256": "cabb3cab420be5e02ab4abb22555375b929e0c4827ddd73b46acfceb9773cf1b",
+   "bytes": 357183
+  },
+  "questions/math500/rate25_real50.parquet": {
+   "sha256": "8c86af0415052fd726ed2d8921d52c5195916e6aba099657974b3f362e663e57",
+   "bytes": 356677
+  },
+  "questions/math500/rate25_real60.parquet": {
+   "sha256": "84976fe78cd4231a37d8d8596a3d4de78c6492d80631218a882f300dcb98bac3",
+   "bytes": 356002
+  },
+  "questions/math500/rate25_real70.parquet": {
+   "sha256": "ea9222e69fa61760a5340ab8c572e1da0988f0cbe95b4be6d5cadefa86bfaf8d",
+   "bytes": 355799
+  },
+  "questions/math500/rate50_real0.parquet": {
+   "sha256": "e1d2dc471db680daa95e00ddac5b00d461f1832b114461264a04215d27940e6e",
+   "bytes": 440976
+  },
+  "questions/math500/rate50_real10.parquet": {
+   "sha256": "a77da294628637c7bc8d5811d05d9817d75b0608a2eb42b0ee3343854f49cdb8",
+   "bytes": 440643
+  },
+  "questions/math500/rate50_real20.parquet": {
+   "sha256": "85bba41e9afaedf1f86a0b6f95ce8de2ecdd66a119c395ad00db97c760ef4b8b",
+   "bytes": 439713
+  },
+  "questions/math500/rate50_real30.parquet": {
+   "sha256": "3a25c278d66f1c1111928c668354b28c8eb3eeea86c2a1ecc563e8b3e55c41c5",
+   "bytes": 439364
+  },
+  "questions/math500/rate50_real40.parquet": {
+   "sha256": "0ebe13f78ad35eb5412647aa2e453b8aa8506d54a601a67ec92fb26916e2ce50",
+   "bytes": 438542
+  },
+  "questions/math500/rate50_real50.parquet": {
+   "sha256": "26fe68b72b9187a8292cdebbba0fef67eb0c2c5b6235c1176384bdf98964b9c7",
+   "bytes": 437065
+  },
+  "questions/math500/rate50_real60.parquet": {
+   "sha256": "633f136cf612fde2a40d1476c2d1e8adf2a728ee7a6cf0176e88ba2acaecf12f",
+   "bytes": 436374
+  },
+  "questions/math500/rate50_real70.parquet": {
+   "sha256": "8c297ef1b44b49d21e2b047b2009d3ab1e1099c0a4c5c8a1cb9f8e3b92151c02",
+   "bytes": 435322
+  },
+  "questions/math500/rate75_real0.parquet": {
+   "sha256": "6d55a49f07b939a0e6a06f2be1cb0986930542e6569e26b1836aca9674a20591",
+   "bytes": 521411
+  },
+  "questions/math500/rate75_real10.parquet": {
+   "sha256": "c6359bb291540be575b8b89aace8ad8b3ec560d36b244e78986468cc09675053",
+   "bytes": 521096
+  },
+  "questions/math500/rate75_real20.parquet": {
+   "sha256": "6a0accc17d4599b2d7eb91f319bfc13f6b2a9d23d217ef89eb92aeb6c414381d",
+   "bytes": 519577
+  },
+  "questions/math500/rate75_real30.parquet": {
+   "sha256": "96c84cf2321e2963bdb104be2113e8e019bcc00f2f1c8bb4271fb51a9e6a7cb8",
+   "bytes": 518064
+  },
+  "questions/math500/rate75_real40.parquet": {
+   "sha256": "791a8ff336b54447b0dce228b82382bb2991928b9f9718739a158580a2d71670",
+   "bytes": 516687
+  },
+  "questions/math500/rate75_real50.parquet": {
+   "sha256": "e2904ab137a267e75211acb58f88865f1e00987bbbc4719ee393f02acab2645f",
+   "bytes": 514913
+  },
+  "questions/math500/rate75_real60.parquet": {
+   "sha256": "0b7e9fb170b5237022865be390f26c97e759a8a033e5ff89d3108c59a563b30e",
+   "bytes": 513411
+  },
+  "questions/math500/rate75_real70.parquet": {
+   "sha256": "330e698cce1b6b32370b4562aa8c602ce21769bcfa5c1efecf6e2452e85b8030",
+   "bytes": 511622
+  },
+  "questions/math500/real0.parquet": {
+   "sha256": "87c5b37ed9ea8207fb346efed30638e2643533022c371dafb9cfca2dc0ca3650",
+   "bytes": 374379
+  },
+  "questions/math500/real10.parquet": {
+   "sha256": "e3f73c53e90737f0752d16aadbaea562020ed57eab7be25f6b709355c7da7385",
+   "bytes": 374037
+  },
+  "questions/math500/real20.parquet": {
+   "sha256": "2b7f03d65f79796b887d2aaa1d5dad80e460c4f518a580062994945be7cb0cdd",
+   "bytes": 373951
+  },
+  "questions/math500/real30.parquet": {
+   "sha256": "07885cecffbdcb11e191fd7016e003349e35e973681b829965620df1081b4014",
+   "bytes": 373531
+  },
+  "questions/math500/real40.parquet": {
+   "sha256": "9a64c95052ec2ff02fe1408c19aaa425ed687a2b2957f414269856c9c8ba7c96",
+   "bytes": 372584
+  },
+  "questions/math500/real50.parquet": {
+   "sha256": "8063e28fdebf553a185b85e1efdade19bb595df8c20e7e4049d543a3d0488d4e",
+   "bytes": 372152
+  },
+  "questions/math500/real60.parquet": {
+   "sha256": "b31a8ef31e899294ed70f5822a66a0aa51f279becaf821d8a40c4a08385f2d1d",
+   "bytes": 371149
+  },
+  "questions/math500/real70.parquet": {
+   "sha256": "b50e151c1be54cce3858873c9a67534b92e7d2510bafd3f77f5955efd08f4ff2",
+   "bytes": 370516
   },
   "raw/arc/arc_clean.jsonl": {
    "sha256": "206ef209f42e44c2b22b87309cb893f1d8ec929e5b062f6bbffe7909e5d4ec73",
