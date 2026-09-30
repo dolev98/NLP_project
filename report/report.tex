@@ -312,6 +312,7 @@ All code is available at \url{https://github.com/dolev98/NLP_project}, and the t
 \paragraph{Scope of the mitigation study.} We tested the mitigations only on GSM8K, because each required additional paid API calls; we chose GSM8K because it showed the clearest drop under typos, making it the most informative dataset for testing whether a mitigation recovers performance.
 
 
+\clearpage
 \section*{AI Disclosure and Reflection}
 
 \paragraph{What we used AI for.} We used GitHub Copilot with Claude primarily to support coding tasks during the project. It helped us build the typo-generation and inference pipelines, write analysis scripts, generate matplotlib code for figures, and improve the wording of some parts of the paper. All methodological and experimental decisions, including the two-axis corruption grid, typo-type weights, answer-extraction rules, and judge rubric, were made by us. The analysis scripts were written with Claude's assistance based on these decisions, and all reported results were generated from the raw generation logs using those scripts.
