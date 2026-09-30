@@ -121,7 +121,10 @@ The model defaults to `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B:nscale`, which pi
 the Nscale provider (`--model` or `MODEL` overrides it). The generation cap defaults
 to 20,000 tokens for GSM8K and 17,000 for MATH-500 and ARC. Interrupted runs resume
 where they stopped. Use `--limit 5` instead of `--limit 500` for a smoke test (a few
-cents).
+cents). The spell-check arm needs the pinned pyspellchecker 0.8.3, which rebuilds every
+spell-checked question of the published run; 0.8.4 and later prefer accented words
+(`fete` → `fête`) and break frequency ties differently, which changes the question
+sent to the model for about 70 of the 4,500 typo questions.
 
 **3. Or download the paper's typo datasets, generations and judge scores**
 
